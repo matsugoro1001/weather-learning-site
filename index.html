@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>気象学習支援サイト - 私の特別な1日</title>
+    <link rel="stylesheet" href="style.css?v=20260630-13">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Kiwi+Maru:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 管理用ダッシュボード（画面表示時のみ左側に表示） -->
+    <aside class="dashboard no-print">
+        <header class="dashboard-header">
+            <h1>気象学習コントロール</h1>
+            <p class="subtitle">データの入力と資料の自動生成</p>
+        </header>
+
+        <section class="control-group">
+            <h2>1. 気象データ入力 (CSV)</h2>
+            <div class="file-input-wrapper">
+                <button class="btn btn-primary btn-file">CSVファイルを選択
+                    <input type="file" id="csv-file" accept=".csv">
+                </button>
+                <span id="csv-filename" class="file-name">選択されていません (default_data使用中)</span>
+            </div>
+            <p class="help-text">気象庁からダウンロードした1時間ごとのCSVデータを読み込めます。</p>
+            <p class="link-text"><a href="https://www.data.jma.go.jp/risk/obsdl/index.php" target="_blank" rel="noopener noreferrer">「気象データ」ここから</a></p>
+            <div class="link-text obs-instructions mt-2 pt-2 border-top" style="border-top: 1px dashed #cbd5e1;">
+                <span style="font-weight: 700; color: #475569; display: block; margin-bottom: 4px; font-size: 0.78rem;">📊 ダウンロード手順：</span>
+                <ul style="padding-left: 16px; margin: 0; color: #64748b; font-size: 0.75rem; line-height: 1.45;">
+                    <li style="margin-bottom: 2px;"><strong>地点</strong>：地図上の <span style="color: #ef4444; font-weight: bold;">赤い◎</span> を選ぶ</li>
+                    <li style="margin-bottom: 2px;"><strong>項目</strong>：「時別値」の「気温、風向・風速、現地気圧、天気、相対湿度」を選ぶ</li>
+                    <li><strong>期間</strong>：「連続した期間で表示する」を選び、当日とその前後1日の3日間を選ぶ</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="control-group">
+            <h2>2. 天気図カレンダーのアップロード</h2>
+            <div class="calendar-inputs">
+                <div class="file-input-wrapper mb-2">
+                    <button class="btn btn-secondary btn-file btn-sm">カレンダー天気図PDF 1
+                        <input type="file" id="cal-file-1" accept="application/pdf">
+                    </button>
+                    <span id="cal-file-1-name" class="file-name">選択されていません</span>
+                </div>
+                <div class="file-input-wrapper">
+                    <button class="btn btn-secondary btn-file btn-sm">カレンダー天気図PDF 2 (月またぎ用)
+                        <input type="file" id="cal-file-2" accept="application/pdf">
+                    </button>
+                    <span id="cal-file-2-name" class="file-name">選択されていません</span>
+                </div>
+            </div>
+            <p class="help-text">気象庁の「日々の天気図」PDF（1ヶ月分）をアップロードします。月をまたぐ日程がある場合はPDF 2も使用してください。</p>
+            <p class="link-text"><a href="https://www.data.jma.go.jp/yoho/hibiten/index.html" target="_blank" rel="noopener noreferrer">「天気図データ」ここから</a></p>
+
+
+        </section>
+
+        <section class="control-group">
+            <h2>3. 提出情報</h2>
+            <div class="control-row-inline">
+                <input type="text" id="student-group" placeholder="グループ" style="width: 100px;">
+                <input type="text" id="student-name" placeholder="名前" style="flex-grow: 1;">
+            </div>
+        </section>
+
+        <div class="action-buttons">
+            <button class="btn btn-success btn-block" onclick="window.print()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: middle;">
+                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm7 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/>
+                </svg>PDFとして保存・印刷
+            </button>
+        </div>
+    </aside>
+
+    <!-- 印刷用・プレビュー用A4用紙（実物） -->
+    <main class="page-container">
+        <article class="a4-sheet" id="a4-sheet-preview">
+            <!-- 提出用名前欄（プレビュー画面のみ、印刷時は表示） -->
+            <div class="student-info-print">
+                <span id="print-group">グループ：＿＿＿＿</span>
+                <span id="print-name">名前：＿＿＿＿＿＿＿＿</span>
+            </div>
+
+            <section class="section-weather-charts">
+                <h2 class="section-title">5．『私にとって、忘れられない特別な1日』の前後の天気図は…</h2>
+                
+                <div class="weather-charts-grid">
+                    <!-- 1日目 -->
+                    <div class="chart-item display-mode-image">
+                        <div class="chart-date-header">
+                            <span class="date-month-fill" id="chart-month-1">　</span>月<span class="date-day-fill" id="chart-day-1">　</span>日
+                        </div>
+                        <div class="chart-image-container">
+                            <img id="weather-map-1" src="output/default_chart1.png" alt="天気図1日目">
+                            <canvas id="crop-canvas-1" style="display:none;"></canvas>
+                        </div>
+                        <div class="chart-description">
+                            <strong id="desc-title-1">1日目</strong>
+                            <p id="desc-body-1">（気象データから自動抽出）</p>
+                        </div>
+                    </div>
+
+                    <!-- 2日目 (特別な1日) -->
+                    <div class="chart-item special-day-border display-mode-image">
+                        <div class="chart-date-header">
+                            <span class="date-month-fill" id="chart-month-2">　</span>月<span class="date-day-fill" id="chart-day-2">　</span>日
+                        </div>
+                        <div class="chart-image-container">
+                            <img id="weather-map-2" src="output/default_chart2.png" alt="天気図2日目">
+                            <canvas id="crop-canvas-2" style="display:none;"></canvas>
+                        </div>
+                        <div class="chart-description">
+                            <strong id="desc-title-2">2日目</strong>
+                            <p id="desc-body-2">（特別な1日）</p>
+                        </div>
+                    </div>
+
+                    <!-- 3日目 -->
+                    <div class="chart-item display-mode-image">
+                        <div class="chart-date-header">
+                            <span class="date-month-fill" id="chart-month-3">　</span>月<span class="date-day-fill" id="chart-day-3">　</span>日
+                        </div>
+                        <div class="chart-image-container">
+                            <img id="weather-map-3" src="output/default_chart3.png" alt="天気図3日目">
+                            <canvas id="crop-canvas-3" style="display:none;"></canvas>
+                        </div>
+                        <div class="chart-description">
+                            <strong id="desc-title-3">3日目</strong>
+                            <p id="desc-body-3">（翌日）</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section-weather-graph">
+                <h2 class="section-title">6．気象要素をグラフで整理すると… <span class="location-badge" id="print-location">（観測地点：未読込）</span></h2>
+                <p class="graph-subtitle">
+                    <span class="legend-temp">気温：赤</span>　
+                    <span class="legend-hum">湿度：青</span>　
+                    <span class="legend-press">気圧：緑</span>
+                </p>
+
+                <div class="graphs-container">
+                    <!-- 上グラフ（1日目＆2日目） -->
+                    <div class="graph-block upper-block">
+                        <div class="graph-svg-wrapper" id="svg-container-upper">
+                            <!-- SVGグラフがここに挿入されます -->
+                        </div>
+                    </div>
+
+                    <!-- 下グラフ（3日目＆空き枠） -->
+                    <div class="graph-block lower-block">
+                        <div class="graph-svg-wrapper" id="svg-container-lower">
+                            <!-- SVGグラフがここに挿入されます -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </article>
+    </main>
+
+
+
+    <script src="app.js?v=20260630-13"></script>
+</body>
+</html>

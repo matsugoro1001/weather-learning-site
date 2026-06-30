@@ -1,0 +1,763 @@
+/* ==========================================================================
+   Design System & Variable Tokens
+   ========================================================================== */
+:root {
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    --panel-bg: rgba(30, 41, 59, 0.7);
+    --panel-border: rgba(255, 255, 255, 0.08);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --primary: #38bdf8;
+    --primary-hover: #0ea5e9;
+    --secondary: #64748b;
+    --secondary-hover: #475569;
+    --success: #10b981;
+    --success-hover: #059669;
+    --danger: #ef4444;
+    
+    --font-ui: 'Inter', 'Noto Sans JP', sans-serif;
+    --font-sheet: 'Noto Sans JP', sans-serif;
+    --font-handwritten: 'Kiwi Maru', serif;
+}
+
+/* ==========================================================================
+   Reset & Base Styles (Screen Only)
+   ========================================================================== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-ui);
+    background: var(--bg-gradient);
+    color: var(--text-main);
+    min-height: 100vh;
+    display: flex;
+    overflow-x: hidden;
+}
+
+/* ==========================================================================
+   Dashboard Panel (Left Side)
+   ========================================================================== */
+.dashboard {
+    width: 380px;
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px);
+    border-right: 1px solid var(--panel-border);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    height: 100vh;
+    overflow-y: auto;
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.dashboard-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--primary);
+    margin-bottom: 4px;
+}
+
+.dashboard-header .subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.control-group {
+    background: rgba(15, 23, 42, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.control-group h2 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--primary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 6px;
+}
+
+.help-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    line-height: 1.3;
+}
+
+/* Inputs and Forms */
+.control-row {
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.control-row label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+input[type="text"],
+input[type="number"],
+textarea {
+    width: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text-main);
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+.control-row-inline {
+    display: flex;
+    gap: 8px;
+}
+
+/* File Input Hack */
+.file-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-file {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-file input[type="file"] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    cursor: pointer;
+    display: block;
+}
+
+.file-name {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+    border: 1px solid transparent;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-sm {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: #0f172a;
+}
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+.btn-secondary {
+    background-color: var(--secondary);
+    color: var(--text-main);
+}
+.btn-secondary:hover {
+    background-color: var(--secondary-hover);
+}
+
+.btn-success {
+    background-color: var(--success);
+    color: var(--text-main);
+    font-weight: 600;
+}
+.btn-success:hover {
+    background-color: var(--success-hover);
+}
+
+/* Tabs */
+.day-tabs {
+    display: flex;
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 6px;
+    padding: 2px;
+    margin-bottom: 12px;
+}
+
+.tab-btn {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 6px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+
+.tab-btn.active {
+    background: var(--secondary);
+    color: var(--text-main);
+}
+
+/* Accordion */
+.accordion-trigger {
+    font-size: 0.75rem;
+    color: var(--primary);
+    cursor: pointer;
+    margin-top: 8px;
+    text-align: right;
+    user-select: none;
+}
+
+.accordion-content {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.accordion-content.hidden {
+    display: none;
+}
+
+/* Sliders */
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.mb-2 {
+    margin-bottom: 8px;
+}
+
+/* ==========================================================================
+   Page Preview Area (Right Side)
+   ========================================================================== */
+.page-container {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px;
+    height: 100vh;
+    overflow-y: auto;
+    background: #020617;
+}
+
+/* A4 Sheet Styles (忠実に再現) */
+.a4-sheet {
+    background: #ffffff;
+    color: #333333;
+    width: 210mm;
+    height: 297mm;
+    padding: 6mm 15mm; /* 12mm から 6mm に削減 */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border-radius: 2px;
+    font-family: var(--font-sheet);
+    transform-origin: top center;
+}
+
+/* 印刷用ヘッダー情報 */
+.student-info-print {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    font-size: 11pt;
+    font-weight: 500;
+    margin-bottom: 2mm; /* 5mm から 2mm に削減 */
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 2mm;
+}
+
+.section-title {
+    font-size: 13pt;
+    font-weight: 700;
+    border: 2px solid #333;
+    background-color: #f3f4f6;
+    padding: 4px 10px;
+    margin-bottom: 2mm; /* 4mm から 2mm に削減 */
+    border-radius: 4px;
+}
+
+/* 天気図グリッド */
+.section-weather-charts {
+    margin-bottom: 3mm; /* 6mm から 3mm に削減 */
+}
+
+.weather-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3mm;
+    border: 2px solid #333;
+    padding: 2mm;
+    background: #fafafa;
+    border-radius: 4px;
+}
+
+.chart-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #ccc;
+    padding: 1.5mm;
+    background: white;
+}
+
+/* 特別な1日の枠を強調 */
+.special-day-border {
+    border: 2px solid #ef4444 !important;
+    box-shadow: 0 0 5px rgba(239, 68, 68, 0.2);
+}
+
+.chart-date-header {
+    font-size: 11pt;
+    font-weight: 700;
+    margin-bottom: 2mm;
+    text-align: center;
+}
+
+.date-month-fill,
+.date-day-fill {
+    font-family: var(--font-handwritten);
+    display: inline-block;
+    min-width: 15px;
+    border-bottom: 1px solid #666;
+    margin: 0 2px;
+}
+
+.chart-image-container {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border: 1px solid #eee;
+    background: #fdfdfd;
+    overflow: hidden;
+    position: relative;
+}
+
+.chart-image-container img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+}
+
+.chart-description {
+    margin-top: 2mm;
+    width: 100%;
+    font-size: 9pt;
+    line-height: 1.45;
+    border-top: 1px dashed #ccc;
+    padding-top: 1.5mm;
+    height: 33mm;
+    overflow: hidden;
+}
+
+.chart-description strong {
+    display: block;
+    font-size: 10pt;
+    margin-bottom: 2mm;
+    color: #111;
+}
+
+.chart-description p {
+    color: #444;
+    font-family: var(--font-handwritten);
+}
+
+/* ==========================================================================
+   グラフエリア
+   ========================================================================== */
+.section-weather-graph {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: auto; /* グラフセクションを用紙下部にスライド */
+}
+
+.graphs-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2mm;
+}
+
+.graph-block {
+    border: 2px solid #333;
+    border-radius: 4px;
+    overflow: hidden;
+    background: white;
+    position: relative;
+}
+
+.graph-block.upper-block {
+    height: 56mm !important;
+}
+
+.graph-block.lower-block {
+    height: 56mm !important;
+}
+
+.graph-svg-wrapper {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.graph-svg-wrapper svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* 概況説明を表示して用紙の余白を有効活用 */
+.chart-description {
+    /* display: none !important; */
+}
+
+.graph-subtitle {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 3mm;
+    color: #333333;
+    text-align: center;
+}
+
+.location-badge {
+    font-size: 0.95rem;
+    color: var(--primary);
+    font-weight: 500;
+    margin-left: 10px;
+}
+
+/* ==========================================================================
+   Print Styles (@media print)
+   ========================================================================== */
+@media print {
+    /* ブラウザの印刷オプション設定に合わせる */
+    @page {
+        size: A4 portrait;
+        margin: 0;
+    }
+
+    html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        height: auto;
+        overflow: visible;
+        width: 100%;
+    }
+
+    /* 管理ダッシュボードは非表示 */
+    .no-print,
+    .dashboard {
+        display: none !important;
+    }
+
+    .page-container {
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        height: auto !important;
+        background: #ffffff !important;
+    }
+
+    .a4-sheet {
+        box-shadow: none !important;
+        transform: none !important;
+        margin: 0 !important;
+        padding: 6mm 15mm !important; /* 12mm から 6mm に削減 */
+        width: 210mm !important;
+        height: 297mm !important;
+        page-break-after: avoid;
+        page-break-before: avoid;
+        overflow: hidden !important;
+    }
+
+    .graph-subtitle {
+        color: #000000 !important;
+        font-size: 10pt !important;
+        margin-bottom: 2mm !important;
+    }
+
+    .location-badge {
+        color: #000000 !important;
+        font-size: 10pt !important;
+    }
+    .link-text {
+        display: none !important;
+    }
+    .legend-temp {
+        color: #dc2626 !important;
+    }
+    .legend-hum {
+        color: #2563eb !important;
+    }
+    .legend-press {
+        color: #16a34a !important;
+    }
+}
+
+.link-text {
+    margin-top: 1.5mm;
+    font-size: 0.82rem;
+}
+.link-text a {
+    color: #3b82f6;
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+.link-text a:hover {
+    color: #60a5fa;
+}
+
+.legend-temp {
+    color: #dc2626;
+    font-weight: bold;
+}
+.legend-hum {
+    color: #2563eb;
+    font-weight: bold;
+}
+.legend-press {
+    color: #16a34a;
+    font-weight: bold;
+}
+
+/* 微調整パネルのスタイル */
+.adjust-details {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-top: 10px;
+}
+
+.adjust-summary {
+    font-weight: 600;
+    cursor: pointer;
+    color: #4b5563;
+    font-size: 0.9rem;
+    outline: none;
+    user-select: none;
+}
+
+.adjust-summary:hover {
+    color: #111827;
+}
+
+.adjust-panel {
+    margin-top: 10px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 8px;
+}
+
+.adjust-panel .control-row {
+    margin-bottom: 8px;
+}
+
+.adjust-panel .control-row:last-child {
+    margin-bottom: 0;
+}
+
+.adjust-panel label {
+    display: block;
+    font-size: 0.8rem;
+    color: #4b5563;
+    margin-bottom: 4px;
+}
+
+.adjust-panel input[type="range"] {
+    width: 100%;
+}
+
+.day-adjust-sub-details {
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    background-color: #ffffff;
+    padding: 6px 10px;
+}
+
+.day-adjust-sub-summary {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #374151;
+    cursor: pointer;
+    outline: none;
+    user-select: none;
+}
+
+/* ==========================================================================
+   表示モード & 一括切り出しツールの追加スタイル
+   ========================================================================== */
+
+/* 表示モード切り替えトグル */
+.custom-controls-wrapper {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.display-mode-selector {
+    display: flex;
+    flex-direction: column;
+}
+
+.toggle-switch-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    transition: .3s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #64748b;
+}
+
+input:checked + .slider {
+    background-color: #10b981;
+}
+
+input:checked + .slider:before {
+    transform: translateX(22px);
+}
+
+.slider.round {
+    border-radius: 22px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.toggle-label-text {
+    font-size: 0.8rem;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+
+
+
+/* ワークシートの「画像丸ごと」モード表示のスタイル補正 */
+.chart-item.display-mode-image {
+    padding-bottom: 2mm; /* テキストが無い分、下の余白を広げる */
+}
+
+.chart-item.display-mode-image .chart-image-container {
+    aspect-ratio: 2 / 2.9; /* 縦長の天気図+説明文が入るようにアスペクト比を縦長に変更 */
+    background: #ffffff;
+    border: none;
+}
+
+.chart-item.display-mode-image .chart-image-container img {
+    border: 1px solid #ccc; /* 地図の周りではなく、カード全体の周りに枠をつける */
+    border-radius: 4px;
+}
+
+.chart-item.display-mode-image .chart-description {
+    display: none !important; /* テキスト説明エリアを非表示にする */
+}
+
+
+
