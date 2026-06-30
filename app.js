@@ -1233,7 +1233,8 @@ function drawWindFeathers(group, force) {
             line.setAttribute('stroke-width', '1.2');
             group.appendChild(line);
         }
-        // 2. 左側 (force - 6 本の短い羽)
+        // 2. 左側 (force - 6 本の羽)
+        // 左側も右側と同様に、1本目（先端）のみ長い羽、それ以降は短い羽を描く
         const leftCount = force - 6;
         for (let i = 0; i < leftCount; i++) {
             const yStart = yStarts[i];
@@ -1243,7 +1244,7 @@ function drawWindFeathers(group, force) {
             line.setAttribute('x1', 0);
             line.setAttribute('y1', yStart);
 
-            const length = 3.5; // 左側はすべて短い羽
+            const length = (i === 0) ? 6.5 : 3.5; // 先端（1本目）のみ長い羽、それ以外は短い羽
             line.setAttribute('x2', -length * Math.sin(rad)); // X座標をマイナスにして左へ伸ばす
             line.setAttribute('y2', yStart - length * Math.cos(rad));
             line.setAttribute('stroke', '#333333');
