@@ -163,34 +163,49 @@ function parseCsv(text) {
     // データ開始行より前のすべての行をスキャンして、ヘッダー項目から列インデックスを自動検出
     let foundDatetime = false, foundTemp = false, foundWindSpeed = false, foundWindDir = false, foundPressure = false, foundHumidity = false, foundWeather = false;
 
-    // 1巡目：具体的な単位や記号を含むキーワードで検索
+    // 指定された列インデックスが品質情報または均質番号であるかをヘッダー全体からチェックするヘルパー
+    function isQualityOrHomogeneity(colIdx) {
+        for (let rowIdx = 0; rowIdx < dataStartLineIdx; rowIdx++) {
+            if (!lines[rowIdx]) continue;
+            const cols = lines[rowIdx].split(',').map(c => c.trim().replace(/[\"\']/g, ""));
+            if (colIdx < cols.length) {
+                const colText = cols[colIdx];
+                if (colText.includes("品質情報") || colText.includes("均質番号")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // 1巡目：具体的な単位や記号を含むキーワードで検索 (全半角の表記揺れに対応)
     for (let i = 0; i < dataStartLineIdx; i++) {
         const cols = lines[i].split(',').map(c => c.trim().replace(/[\"\']/g, ""));
         for (let colIdx = 0; colIdx < cols.length; colIdx++) {
             const colText = cols[colIdx];
             if (!colText) continue;
 
-            // 品質情報や均質番号の列はデータ列ではないのでスキップ
-            if (colText.includes("品質情報") || colText.includes("均質番号")) {
+            // 品質情報や均質番号の列はデータ列ではないので絶対にスキップ
+            if (colText.includes("品質情報") || colText.includes("均質番号") || isQualityOrHomogeneity(colIdx)) {
                 continue;
             }
 
             if (!foundDatetime && (colText.includes("時間") || colText.includes("時刻") || colText.includes("年月"))) {
                 datetimeColIdx = colIdx;
                 foundDatetime = true;
-            } else if (!foundTemp && colText.includes("気温(℃)")) {
+            } else if (!foundTemp && (colText.includes("気温(℃)") || colText.includes("気温（℃）"))) {
                 tempColIdx = colIdx;
                 foundTemp = true;
-            } else if (!foundWindSpeed && colText.includes("風速(m/s)")) {
+            } else if (!foundWindSpeed && (colText.includes("風速(m/s)") || colText.includes("風速（m/s）"))) {
                 windSpeedColIdx = colIdx;
                 foundWindSpeed = true;
-            } else if (!foundWindDir && colText === "風向") {
+            } else if (!foundWindDir && (colText === "風向" || colText === "風向（16方位）" || colText === "風向(16方位)")) {
                 windDirColIdx = colIdx;
                 foundWindDir = true;
-            } else if (!foundPressure && colText.includes("現地気圧(hPa)")) {
+            } else if (!foundPressure && (colText.includes("現地気圧(hPa)") || colText.includes("現地気圧（hPa）"))) {
                 pressureColIdx = colIdx;
                 foundPressure = true;
-            } else if (!foundHumidity && (colText.includes("相対湿度(％)") || colText.includes("相対湿度(%)"))) {
+            } else if (!foundHumidity && (colText.includes("相対湿度(％)") || colText.includes("相対湿度(%)") || colText.includes("相対湿度（％）") || colText.includes("相対湿度（%）"))) {
                 humidityColIdx = colIdx;
                 foundHumidity = true;
             } else if (!foundWeather && colText === "天気") {
@@ -207,7 +222,7 @@ function parseCsv(text) {
             const colText = cols[colIdx];
             if (!colText) continue;
 
-            if (colText.includes("品質情報") || colText.includes("均質番号")) {
+            if (colText.includes("品質情報") || colText.includes("均質番号") || isQualityOrHomogeneity(colIdx)) {
                 continue;
             }
 
@@ -233,14 +248,14 @@ function parseCsv(text) {
         }
     }
 
-    console.log("Detected Columns:", {
-        datetimeColIdx,
-        tempColIdx,
-        windSpeedColIdx,
-        windDirColIdx,
-        pressureColIdx,
-        humidityColIdx,
-        weatherCodeColIdx
+    console.log("Detected Columns Info:", {
+        datetimeColIdx, datetimeFound: foundDatetime,
+        tempColIdx, tempFound: foundTemp,
+        windSpeedColIdx, windSpeedFound: foundWindSpeed,
+        windDirColIdx, windDirFound: foundWindDir,
+        pressureColIdx, pressureFound: foundPressure,
+        humidityColIdx, humidityFound: foundHumidity,
+        weatherCodeColIdx, weatherFound: foundWeather
     });
 
     const records = [];
@@ -253,13 +268,19 @@ function parseCsv(text) {
         const cols = line.split(',');
         if (cols.length <= maxIdx) continue;
 
-        const datetimeStr = cols[datetimeColIdx];
-        const temp = parseFloat(cols[tempColIdx]);
-        const windSpeed = parseFloat(cols[windSpeedColIdx]);
-        const windDir = cols[windDirColIdx];
-        const pressure = parseFloat(cols[pressureColIdx]);
+        const getCleanFloat = (val) => {
+            if (!val) return NaN;
+            const clean = val.trim().replace(/[\"\']/g, "");
+            return parseFloat(clean);
+        };
+
+        const datetimeStr = cols[datetimeColIdx] ? cols[datetimeColIdx].trim().replace(/[\"\']/g, "") : "";
+        const temp = getCleanFloat(cols[tempColIdx]);
+        const windSpeed = getCleanFloat(cols[windSpeedColIdx]);
+        const windDir = cols[windDirColIdx] ? cols[windDirColIdx].trim().replace(/[\"\']/g, "") : "";
+        const pressure = getCleanFloat(cols[pressureColIdx]);
         
-        let humidity = parseFloat(cols[humidityColIdx]);
+        let humidity = getCleanFloat(cols[humidityColIdx]);
         // 湿度正規化：もし値が 0〜1 の範囲の小数である場合は100倍して0〜100%にする
         if (!isNaN(humidity) && humidity > 0 && humidity <= 1.0) {
             humidity = humidity * 100;
