@@ -1175,8 +1175,12 @@ function getWindForce(speed) {
 }
 
 // 風力羽を描画 (日本式)
-// 棒は上向き(0, -7)から(0, -24)へ伸びています。
-// 羽は棒の右側に向けて、先端側から順に描きます。
+// 日本式天気図記号のルール：
+// - 風力 = 羽の総数
+// - 長さのルール：
+//   - 風力 1 の場合：短い羽を右側に1本描く。
+//   - 風力 2〜6 の場合：一番先端（1本目）を長い羽、残りの (風力 - 1) 本を短い羽として右側に描く。
+//   - 風力 7〜12 の場合：右側に長い羽1本と短い羽5本（合計6本）を描き、反対側（左側）に (風力 - 6) 本の短い羽を描く。
 function drawWindFeathers(group, force) {
     const featherAngle = 60; // 棒に対する角度 (右に傾ける)
     const rad = (featherAngle * Math.PI) / 180;
@@ -1184,37 +1188,68 @@ function drawWindFeathers(group, force) {
     // 羽を描画するY座標のリスト (先端側から下へ並べる)
     const yStarts = [-24, -21.5, -19, -16.5, -14, -11.5];
     
-    let fCount = force;
-    let idx = 0;
+    if (force <= 0) return;
 
-    // 長い羽は風力2相当、短い羽は風力1相当
-    while (fCount > 0) {
-        const yStart = yStarts[idx];
-        if (yStart === undefined) break;
-
+    if (force === 1) {
+        // 風力1: 右側に短い羽1本
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', 0);
-        line.setAttribute('y1', yStart);
-
-        let length = 6.5; // 長い羽
-        if (fCount === 1) {
-            length = 3.5; // 短い羽
-            fCount -= 1;
-        } else {
-            fCount -= 2; // 長い羽は風力2を引く
-        }
-
-        // 先端から羽を伸ばす (右上へ上上がりに)
-        const xEnd = length * Math.sin(rad);
-        const yEnd = yStart - length * Math.cos(rad); // 上上がりにするため、さらに上（マイナス方向）に向けて伸ばす
-
-        line.setAttribute('x2', xEnd);
-        line.setAttribute('y2', yEnd);
+        line.setAttribute('y1', yStarts[0]);
+        line.setAttribute('x2', 3.5 * Math.sin(rad));
+        line.setAttribute('y2', yStarts[0] - 3.5 * Math.cos(rad));
         line.setAttribute('stroke', '#333333');
         line.setAttribute('stroke-width', '1.2');
         group.appendChild(line);
+    } else if (force <= 6) {
+        // 風力2〜6: 右側に長い羽1本、短い羽 (force - 1) 本
+        for (let i = 0; i < force; i++) {
+            const yStart = yStarts[i];
+            if (yStart === undefined) break;
 
-        idx++;
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', 0);
+            line.setAttribute('y1', yStart);
+
+            const length = (i === 0) ? 6.5 : 3.5; // 先端（1本目）のみ長い羽、それ以外は短い羽
+            line.setAttribute('x2', length * Math.sin(rad));
+            line.setAttribute('y2', yStart - length * Math.cos(rad));
+            line.setAttribute('stroke', '#333333');
+            line.setAttribute('stroke-width', '1.2');
+            group.appendChild(line);
+        }
+    } else {
+        // 風力7〜12: 右側に長い羽1本＋短い羽5本。左側に短い羽 (force - 6) 本
+        // 1. 右側 (6本)
+        for (let i = 0; i < 6; i++) {
+            const yStart = yStarts[i];
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', 0);
+            line.setAttribute('y1', yStart);
+
+            const length = (i === 0) ? 6.5 : 3.5;
+            line.setAttribute('x2', length * Math.sin(rad));
+            line.setAttribute('y2', yStart - length * Math.cos(rad));
+            line.setAttribute('stroke', '#333333');
+            line.setAttribute('stroke-width', '1.2');
+            group.appendChild(line);
+        }
+        // 2. 左側 (force - 6 本の短い羽)
+        const leftCount = force - 6;
+        for (let i = 0; i < leftCount; i++) {
+            const yStart = yStarts[i];
+            if (yStart === undefined) break;
+
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', 0);
+            line.setAttribute('y1', yStart);
+
+            const length = 3.5; // 左側はすべて短い羽
+            line.setAttribute('x2', -length * Math.sin(rad)); // X座標をマイナスにして左へ伸ばす
+            line.setAttribute('y2', yStart - length * Math.cos(rad));
+            line.setAttribute('stroke', '#333333');
+            line.setAttribute('stroke-width', '1.2');
+            group.appendChild(line);
+        }
     }
 }
 
