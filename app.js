@@ -1373,3 +1373,74 @@ function drawWeatherSymbol(group, code) {
 // ==========================================================================
 
 
+// ==========================================================================
+// 7. PDFのアップロード提出機能 (GAS連携)
+// ==========================================================================
+
+const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzGK7T9YRaClwjsrAYpwsQrVrpErw5Kg-1LvBd04-hlwtuEt01DSkb4zT5qAfM_dFpkQA/exec";
+
+function uploadPdfToDrive() {
+    const fileInput = document.getElementById('submit-pdf-file');
+    const group = document.getElementById('student-group').value.trim();
+    const name = document.getElementById('student-name').value.trim();
+    const btn = document.getElementById('submit-btn');
+    
+    if (!name) {
+        alert("上の「3. 提出情報」で名前を入力してください。");
+        return;
+    }
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert("保存したPDFファイルを選択してください。");
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    const fileName = (group ? group + "_" : "") + name + ".pdf";
+    
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "アップロード中...";
+    btn.disabled = true;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Base64データを取り出す (data:application/pdf;base64, の後)
+        const base64Data = e.target.result.split(',')[1];
+        
+        const payload = JSON.stringify({
+            fileName: fileName,
+            fileData: base64Data,
+            contentType: file.type
+        });
+
+        // 匿名としてGASへ送信（ブラウザのブロックを回避）
+        fetch(GAS_WEBAPP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            credentials: 'omit',
+            headers: {
+                'Content-Type': 'text/plain',
+            },
+            body: payload
+        })
+        .then(() => {
+            alert("「" + fileName + "」として先生のフォルダに提出しました！");
+            fileInput.value = ""; // リセット
+        })
+        .catch(error => {
+            console.error(error);
+            alert("エラーが発生しました。時間をおいて再度お試しください。");
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    };
+    
+    reader.onerror = function(error) {
+        alert("ファイルの読み込みに失敗しました。");
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    };
+    
+    reader.readAsDataURL(file);
+}

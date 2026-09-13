@@ -69,6 +69,22 @@
             </div>
         </section>
 
+        <section class="control-group">
+            <h2>4. PDFの提出（アップロード）</h2>
+            <p class="help-text" style="margin-bottom: 8px;">下の「PDFとして保存・印刷」ボタンで一度パソコンやスマホに保存したPDFファイルを選んで、先生に提出します。</p>
+            <div class="file-input-wrapper">
+                <button class="btn btn-secondary btn-file btn-sm">保存したPDFを選ぶ
+                    <input type="file" id="submit-pdf-file" accept="application/pdf" onchange="document.getElementById('submit-pdf-name').innerText = this.files.length > 0 ? this.files[0].name : '選択されていません'">
+                </button>
+                <span id="submit-pdf-name" class="file-name">選択されていません</span>
+            </div>
+            <button class="btn btn-success btn-block" id="submit-btn" onclick="uploadPdfToDrive()" style="margin-top: 10px; background-color: #0ea5e9;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: middle;">
+                    <path fill-rule="evenodd" d="M8 0a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 1 1 .708-.708L7.5 12.293V.5A.5.5 0 0 1 8 0z"/>
+                    <path d="M1 14.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5z"/>
+                </svg>ドライブへ提出する
+            </button>
+        </section>
         <div class="action-buttons">
             <button class="btn btn-success btn-block" onclick="window.print()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: middle;">
@@ -167,6 +183,6 @@
 
 
 
-    <script src="app.js?v=20260630-16"></script>
+    <script src="app.js?v=20260913-3"></script>
 </body>
 </html>
