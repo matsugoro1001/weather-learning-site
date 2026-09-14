@@ -54,6 +54,7 @@ window.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
     loadDefaultData();
     updateLocationDisplay();
+    setupCanvasDrag();
 });
 
 // イベントリスナーのセットアップ
@@ -320,6 +321,7 @@ function parseCsv(text) {
     }
     state.locationName = locationName || "CSV観測地点";
     updateLocationDisplay();
+    setupCanvasDrag();
 
     // 縦軸範囲の自動調整
     adjustGraphAxes();
@@ -628,16 +630,29 @@ async function renderSingleWeatherChart(dayIdx) {
             state.pageCache[cacheKey] = tempCanvas;
         }
 
-        // キャッシュ情報を保存して描画関数を呼ぶ
+        // キャッシュ情報を保存
         state.cropOffsets[dayIdx].tempCanvas = tempCanvas;
         state.cropOffsets[dayIdx].cellIdx = cellIdx;
+
+        // 4x4グリッドのセルを切り出す (ページの余白マージンを考慮)
+        const W = tempCanvas.width;
+        const H = tempCanvas.height;
+
+        const settings = state.cropSettings[dayIdx];
         
+        const gridX = W * (settings.x / 100);
+        const gridY = H * (settings.y / 100);
+        const gridW = W * (settings.w / 100);
+        const gridH = H * (settings.h / 100);
+
+        const cellW = gridW / 4;
+        const cellH = gridH / 4;
+
+        const col = cellIdx % 4;
+        const row = Math.floor(cellIdx / 4);
+
         drawCrop(dayIdx);
-
-        const dataUrl = canvas.toDataURL('image/png');
-        state.dayNotes[dayIdx].mapSrc = dataUrl;
-        if (imgEl) imgEl.src = dataUrl;
-
+        
         // ワークシートのUI表示モード用クラス切り替え
         if (chartItem) {
             if (state.displayMode === "image") {
@@ -646,6 +661,8 @@ async function renderSingleWeatherChart(dayIdx) {
                 chartItem.classList.remove('display-mode-image');
             }
         }
+        
+        const page = await pdfDoc.getPage(pageNum); // テキスト抽出のためだけにページを取得し直す (非常に軽量)
 
         // テキストの自動抽出と概況説明欄への流し込み
         try {
@@ -1441,21 +1458,21 @@ window.updateCropSettings = function() {
     }
     
     if (state.pdfFiles && state.pdfFiles.length > 0) {
-        renderAllWeatherCharts();
+        for (let i = 0; i < 3; i++) drawCrop(i);
     }
 };
 
 
 // 描画専用の関数（ドラッグ等で高速に再描画するため）
 function drawCrop(dayIdx) {
-    const canvas = document.getElementById(`crop-canvas-${dayIdx + 1}`);
-    const ctx = canvas.getContext('2d');
-    
     const info = state.cropOffsets[dayIdx];
     if (!info.tempCanvas) return;
     
     const tempCanvas = info.tempCanvas;
     const cellIdx = info.cellIdx;
+    
+    const canvas = document.getElementById(`crop-canvas-${dayIdx + 1}`);
+    const ctx = canvas.getContext('2d');
     
     const W = tempCanvas.width;
     const H = tempCanvas.height;
@@ -1472,36 +1489,32 @@ function drawCrop(dayIdx) {
     const col = cellIdx % 4;
     const row = Math.floor(cellIdx / 4);
 
-    // 基本のクロップ位置に、個別ドラッグによるオフセット(dx, dy)を加算
-    // dx, dyは Canvas(140x140) 上での移動量。元のtempCanvas上での移動量に換算する
-    const scaleX = cellW / 140;
-    const scaleY = cellH / 140;
-    
-    // 直感的なドラッグ（マウスを右に動かす＝中の絵が右に動く）にするため、
-    // 切り抜く枠(cropX)自体は左に動かす必要がある。なので引き算する。
-    const cropX = gridX + col * cellW - (info.dx * scaleX);
-    const cropY = gridY + row * cellH - (info.dy * scaleY);
+    const sx = gridX + col * cellW - info.dx;
+    const sy = gridY + row * cellH - info.dy;
 
-    canvas.width = 140;
-    canvas.height = 140;
+    const sw = cellW;
+    const sh = state.displayMode === "image" ? cellH : cellH * 0.73; 
+    const pad = settings.pad;
+
+    canvas.width = sw - pad * 2;
+    canvas.height = sh - pad * 2;
+
+    ctx.drawImage(tempCanvas, sx + pad, sy + pad, sw - pad * 2, sh - pad * 2, 0, 0, canvas.width, canvas.height);
+
+    const dataUrl = canvas.toDataURL('image/png');
+    state.dayNotes[dayIdx].mapSrc = dataUrl;
     
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    ctx.drawImage(
-        tempCanvas, 
-        cropX, cropY, cellW, cellH, 
-        0, 0, canvas.width, canvas.height
-    );
+    const imgEl = document.getElementById(`weather-map-${dayIdx + 1}`);
+    if (imgEl) imgEl.src = dataUrl;
 }
 
-// Canvasへのドラッグ（パン）操作をセットアップ
+// img要素へのドラッグ（パン）操作をセットアップ
 function setupCanvasDrag() {
     for (let i = 0; i < 3; i++) {
-        const canvas = document.getElementById(`crop-canvas-${i + 1}`);
-        if (!canvas) continue;
+        const imgEl = document.getElementById(`weather-map-${i + 1}`);
+        if (!imgEl) continue;
         
-        canvas.style.cursor = 'grab';
+        imgEl.style.cursor = 'grab'; imgEl.draggable = false;
         
         let isDragging = false;
         let lastX = 0;
@@ -1511,7 +1524,7 @@ function setupCanvasDrag() {
             isDragging = true;
             lastX = x;
             lastY = y;
-            canvas.style.cursor = 'grabbing';
+            imgEl.style.cursor = 'grabbing';
         };
         
         const doDrag = (x, y) => {
@@ -1521,40 +1534,41 @@ function setupCanvasDrag() {
             lastX = x;
             lastY = y;
             
-            state.cropOffsets[i].dx += dx;
-            state.cropOffsets[i].dy += dy;
+            // 画面上のピクセル移動量を、Canvas上のピクセルに変換
+            // imgEl.clientWidth が画面上の表示幅。
+            const canvas = document.getElementById(`crop-canvas-${i + 1}`);
+            if(!canvas || !canvas.width) return;
+            
+            const scaleX = canvas.width / imgEl.clientWidth;
+            const scaleY = canvas.height / imgEl.clientHeight;
+            
+            state.cropOffsets[i].dx += dx * scaleX;
+            state.cropOffsets[i].dy += dy * scaleY;
             
             drawCrop(i);
         };
         
         const endDrag = () => {
             isDragging = false;
-            canvas.style.cursor = 'grab';
+            imgEl.style.cursor = 'grab'; imgEl.draggable = false;
         };
         
-        // Mouse events
-        canvas.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
+        imgEl.addEventListener('mousedown', (e) => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
         window.addEventListener('mousemove', (e) => doDrag(e.clientX, e.clientY));
         window.addEventListener('mouseup', endDrag);
         
-        // Touch events
-        canvas.addEventListener('touchstart', (e) => {
+        imgEl.addEventListener('touchstart', (e) => {
             if (e.touches.length > 0) {
-                e.preventDefault(); // スクロール防止
+                e.preventDefault();
                 startDrag(e.touches[0].clientX, e.touches[0].clientY);
             }
         });
         window.addEventListener('touchmove', (e) => {
             if (e.touches.length > 0) {
+                e.preventDefault();
                 doDrag(e.touches[0].clientX, e.touches[0].clientY);
             }
-        });
+        }, {passive: false});
         window.addEventListener('touchend', endDrag);
     }
 }
-
-// ドキュメント読み込み時にセットアップ
-document.addEventListener('DOMContentLoaded', () => {
-    // 既存のDOMContentLoaded処理を探すより、ここでリスナーを追加する
-    setupCanvasDrag();
-});
