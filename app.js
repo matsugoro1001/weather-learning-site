@@ -23,6 +23,8 @@ const state = {
         { title: "2日目", dateStr: "4月2日(木)", desc: "日中に高気圧に覆われ、湿度が大幅に低下（最小52%）しました。気温は一時的に9.1℃まで上昇し、天気も晴れとなりました。風向は北よりでした。", mapSrc: "output/default_chart2.png" },
         { title: "3日目", dateStr: "4月3日(金)", desc: "気圧が緩やかに上昇し、天候が安定しました。風速が弱まり静穏な状態が続いたため、気温の急激な変化はなく、穏やかな1日となりました。", mapSrc: "output/default_chart3.png" }
     ],
+    pageCache: {},
+    cropOffsets: [{dx:0, dy:0}, {dx:0, dy:0}, {dx:0, dy:0}],
     // アップロードされたPDFドキュメントの配列
     // 各ドキュメント: { name, year, month, pdfDoc }
     pdfFiles: [],
@@ -329,7 +331,7 @@ function parseCsv(text) {
     drawGraphs();
     
     // 天気図自動レンダリングの再実行
-    renderAllWeatherCharts();
+    for(let i=0; i<3; i++) drawCrop(i);
 }
 
 // 読み込んだデータから気温・湿度・気圧の最小値・最大値を取得し、グラフの縦軸を自動調整する
@@ -534,7 +536,7 @@ async function handleCalendarPdfUpload(e, slotNum) {
     }
 
     // レンダリングを実行
-    renderAllWeatherCharts();
+    for(let i=0; i<3; i++) drawCrop(i);
 }
 
 // すべての天気図をレンダリング
@@ -607,58 +609,30 @@ async function renderSingleWeatherChart(dayIdx) {
             return;
         }
 
-        const page = await pdfDoc.getPage(pageNum);
-        // 高画質でレンダリングするため scale = 2.5 とする
-        const scale = 2.5;
-        const viewport = page.getViewport({ scale: scale });
+        const cacheKey = `${selectedPdf.slot}_${pageNum}`;
+        let tempCanvas = state.pageCache[cacheKey];
 
-        // 一時的なテンポラリCanvasを作成してページ全体をレンダリングする
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = viewport.width;
-        tempCanvas.height = viewport.height;
-        const tempCtx = tempCanvas.getContext('2d');
+        if (!tempCanvas) {
+            const page = await pdfDoc.getPage(pageNum);
+            const scale = 2.5;
+            const viewport = page.getViewport({ scale: scale });
 
-        const renderContext = {
-            canvasContext: tempCtx,
-            viewport: viewport
-        };
-        await page.render(renderContext).promise;
+            tempCanvas = document.createElement('canvas');
+            tempCanvas.width = viewport.width;
+            tempCanvas.height = viewport.height;
+            const tempCtx = tempCanvas.getContext('2d');
 
-        // 4x4グリッドのセルを切り出す (ページの余白マージンを考慮)
-        const W = tempCanvas.width;
-        const H = tempCanvas.height;
+            const renderContext = { canvasContext: tempCtx, viewport: viewport };
+            await page.render(renderContext).promise;
+            
+            state.pageCache[cacheKey] = tempCanvas;
+        }
 
-        const settings = state.cropSettings[dayIdx];
+        // キャッシュ情報を保存して描画関数を呼ぶ
+        state.cropOffsets[dayIdx].tempCanvas = tempCanvas;
+        state.cropOffsets[dayIdx].cellIdx = cellIdx;
         
-        const gridX = W * (settings.x / 100);
-        const gridY = H * (settings.y / 100);
-        const gridW = W * (settings.w / 100);
-        const gridH = H * (settings.h / 100);
-
-        const cellW = gridW / 4;
-        const cellH = gridH / 4;
-
-        const col = cellIdx % 4;
-        const row = Math.floor(cellIdx / 4);
-
-        const sx = gridX + col * cellW;
-        const sy = gridY + row * cellH;
-
-        // 天気図部分を切り出す。
-        // 天気図のみ(text)モード: 下部の概況文章部分をカットするため、高さをセルの約73%にする
-        // 画像丸ごと(image)モード: セル全体を切り取るため、高さ100%にする
-        const sw = cellW;
-        const sh = state.displayMode === "image" ? cellH : cellH * 0.73; 
-
-        // 境界カット幅（スライダー値）
-        const pad = settings.pad;
-
-        // メインCanvasのサイズを切り出しサイズに合わせる
-        canvas.width = sw - pad * 2;
-        canvas.height = sh - pad * 2;
-
-        // 切り出してコピー描画
-        ctx.drawImage(tempCanvas, sx + pad, sy + pad, sw - pad * 2, sh - pad * 2, 0, 0, canvas.width, canvas.height);
+        drawCrop(dayIdx);
 
         const dataUrl = canvas.toDataURL('image/png');
         state.dayNotes[dayIdx].mapSrc = dataUrl;
@@ -1467,6 +1441,120 @@ window.updateCropSettings = function() {
     }
     
     if (state.pdfFiles && state.pdfFiles.length > 0) {
-        renderAllWeatherCharts();
+        for(let i=0; i<3; i++) drawCrop(i);
     }
 };
+
+
+// 描画専用の関数（ドラッグ等で高速に再描画するため）
+function drawCrop(dayIdx) {
+    const canvas = document.getElementById(`crop-canvas-${dayIdx + 1}`);
+    const ctx = canvas.getContext('2d');
+    
+    const info = state.cropOffsets[dayIdx];
+    if (!info.tempCanvas) return;
+    
+    const tempCanvas = info.tempCanvas;
+    const cellIdx = info.cellIdx;
+    
+    const W = tempCanvas.width;
+    const H = tempCanvas.height;
+    const settings = state.cropSettings[dayIdx];
+    
+    const gridX = W * (settings.x / 100);
+    const gridY = H * (settings.y / 100);
+    const gridW = W * (settings.w / 100);
+    const gridH = H * (settings.h / 100);
+
+    const cellW = gridW / 4;
+    const cellH = gridH / 4;
+
+    const col = cellIdx % 4;
+    const row = Math.floor(cellIdx / 4);
+
+    // 基本のクロップ位置に、個別ドラッグによるオフセット(dx, dy)を加算
+    // dx, dyは Canvas(140x140) 上での移動量。元のtempCanvas上での移動量に換算する
+    const scaleX = cellW / 140;
+    const scaleY = cellH / 140;
+    
+    // 直感的なドラッグ（マウスを右に動かす＝中の絵が右に動く）にするため、
+    // 切り抜く枠(cropX)自体は左に動かす必要がある。なので引き算する。
+    const cropX = gridX + col * cellW - (info.dx * scaleX);
+    const cropY = gridY + row * cellH - (info.dy * scaleY);
+
+    canvas.width = 140;
+    canvas.height = 140;
+    
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.drawImage(
+        tempCanvas, 
+        cropX, cropY, cellW, cellH, 
+        0, 0, canvas.width, canvas.height
+    );
+}
+
+// Canvasへのドラッグ（パン）操作をセットアップ
+function setupCanvasDrag() {
+    for (let i = 0; i < 3; i++) {
+        const canvas = document.getElementById(`crop-canvas-${i + 1}`);
+        if (!canvas) continue;
+        
+        canvas.style.cursor = 'grab';
+        
+        let isDragging = false;
+        let lastX = 0;
+        let lastY = 0;
+        
+        const startDrag = (x, y) => {
+            isDragging = true;
+            lastX = x;
+            lastY = y;
+            canvas.style.cursor = 'grabbing';
+        };
+        
+        const doDrag = (x, y) => {
+            if (!isDragging) return;
+            const dx = x - lastX;
+            const dy = y - lastY;
+            lastX = x;
+            lastY = y;
+            
+            state.cropOffsets[i].dx += dx;
+            state.cropOffsets[i].dy += dy;
+            
+            drawCrop(i);
+        };
+        
+        const endDrag = () => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        };
+        
+        // Mouse events
+        canvas.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
+        window.addEventListener('mousemove', (e) => doDrag(e.clientX, e.clientY));
+        window.addEventListener('mouseup', endDrag);
+        
+        // Touch events
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 0) {
+                e.preventDefault(); // スクロール防止
+                startDrag(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        });
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                doDrag(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        });
+        window.addEventListener('touchend', endDrag);
+    }
+}
+
+// ドキュメント読み込み時にセットアップ
+document.addEventListener('DOMContentLoaded', () => {
+    // 既存のDOMContentLoaded処理を探すより、ここでリスナーを追加する
+    setupCanvasDrag();
+});
