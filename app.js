@@ -1444,3 +1444,25 @@ function uploadPdfToDrive() {
     
     reader.readAsDataURL(file);
 }
+
+// ユーザーが手動で天気図のズレを微調整する関数
+window.updateCropSettings = function() {
+    const x = parseFloat(document.getElementById('adj-x').value);
+    const y = parseFloat(document.getElementById('adj-y').value);
+    const w = parseFloat(document.getElementById('adj-w').value);
+    const h = parseFloat(document.getElementById('adj-h').value);
+    
+    // 全ての日付に適用
+    for (let i = 0; i < 3; i++) {
+        state.cropSettings[i].x = x;
+        state.cropSettings[i].y = y;
+        state.cropSettings[i].w = w;
+        state.cropSettings[i].h = h;
+    }
+    
+    // PDFが読み込まれていれば再描画
+    if (state.pdfDoc1 || state.pdfDoc2) {
+        // 現在の日付に合わせて再描画（extractWeatherMap内で必要な再描画処理が呼ばれるよう、CSV再処理を呼ぶのが一番確実）
+        processCSV();
+    }
+};

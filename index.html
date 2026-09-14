@@ -58,6 +58,28 @@
             <p class="help-text">気象庁の「日々の天気図」PDF（1ヶ月分）をアップロードします。月をまたぐ日程がある場合はPDF 2も使用してください。</p>
             <p class="link-text"><a href="https://www.data.jma.go.jp/yoho/hibiten/index.html" target="_blank" rel="noopener noreferrer">「天気図データ」ここから</a></p>
 
+            <details style="margin-top: 10px; margin-bottom: 5px;">
+                <summary style="cursor: pointer; font-size: 0.9em; color: #4b5563;">⚙️ 天気図がズレる場合の微調整</summary>
+                <div style="padding: 10px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; margin-top: 5px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 0.8em; width: 80px;">左右位置 (X):</span>
+                        <input type="range" id="adj-x" min="0" max="15" step="0.1" value="4.7" oninput="updateCropSettings()" style="flex-grow: 1;">
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 0.8em; width: 80px;">上下位置 (Y):</span>
+                        <input type="range" id="adj-y" min="0" max="15" step="0.1" value="1.8" oninput="updateCropSettings()" style="flex-grow: 1;">
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 0.8em; width: 80px;">全体の横幅:</span>
+                        <input type="range" id="adj-w" min="80" max="100" step="0.1" value="94.9" oninput="updateCropSettings()" style="flex-grow: 1;">
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <span style="font-size: 0.8em; width: 80px;">全体の縦幅:</span>
+                        <input type="range" id="adj-h" min="80" max="100" step="0.1" value="94.2" oninput="updateCropSettings()" style="flex-grow: 1;">
+                    </div>
+                    <div style="font-size: 0.75em; color: #6b7280; margin-top: 8px;">※右側のプレビューを見ながら、枠にピッタリ収まるようにスライダーを動かしてください。</div>
+                </div>
+            </details>
 
         </section>
 
@@ -182,6 +204,6 @@
 
 
 
-    <script src="app.js?v=20260913-4"></script>
+    <script src="app.js?v=20260914-1"></script>
 </body>
 </html>
