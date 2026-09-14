@@ -1452,6 +1452,12 @@ window.updateCropSettings = function() {
     const w = parseFloat(document.getElementById('adj-w').value);
     const h = parseFloat(document.getElementById('adj-h').value);
     
+    // 現在の数値を画面に表示する
+    document.getElementById('val-x').innerText = x.toFixed(1);
+    document.getElementById('val-y').innerText = y.toFixed(1);
+    document.getElementById('val-w').innerText = w.toFixed(1);
+    document.getElementById('val-h').innerText = h.toFixed(1);
+    
     // 全ての日付に適用
     for (let i = 0; i < 3; i++) {
         state.cropSettings[i].x = x;
@@ -1460,9 +1466,7 @@ window.updateCropSettings = function() {
         state.cropSettings[i].h = h;
     }
     
-    // PDFが読み込まれていれば再描画
     if (state.pdfFiles && state.pdfFiles.length > 0) {
-        // 現在の日付に合わせて再描画（extractWeatherMap内で必要な再描画処理が呼ばれるよう、CSV再処理を呼ぶのが一番確実）
         renderAllWeatherCharts();
     }
 };
