@@ -506,7 +506,7 @@ async function handleCalendarPdfUpload(e, slotNum) {
         });
 
         const typedarray = new Uint8Array(arrayBuffer);
-        const pdfDoc = await pdfjsLib.getDocument({ data: typedarray }).promise;
+        const pdfDoc = await pdfjsLib.getDocument({ data: typedarray, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/cmaps/', cMapPacked: true }).promise;
 
         // 既存のスロットがあれば更新、なければ追加
         const pdfInfo = {
@@ -1463,6 +1463,6 @@ window.updateCropSettings = function() {
     // PDFが読み込まれていれば再描画
     if (state.pdfDoc1 || state.pdfDoc2) {
         // 現在の日付に合わせて再描画（extractWeatherMap内で必要な再描画処理が呼ばれるよう、CSV再処理を呼ぶのが一番確実）
-        processCSV();
+        renderAllWeatherCharts();
     }
 };
