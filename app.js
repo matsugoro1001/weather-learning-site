@@ -331,7 +331,7 @@ function parseCsv(text) {
     drawGraphs();
     
     // 天気図自動レンダリングの再実行
-    for(let i=0; i<3; i++) drawCrop(i);
+    renderAllWeatherCharts();
 }
 
 // 読み込んだデータから気温・湿度・気圧の最小値・最大値を取得し、グラフの縦軸を自動調整する
@@ -536,7 +536,7 @@ async function handleCalendarPdfUpload(e, slotNum) {
     }
 
     // レンダリングを実行
-    for(let i=0; i<3; i++) drawCrop(i);
+    renderAllWeatherCharts();
 }
 
 // すべての天気図をレンダリング
@@ -1441,7 +1441,7 @@ window.updateCropSettings = function() {
     }
     
     if (state.pdfFiles && state.pdfFiles.length > 0) {
-        for(let i=0; i<3; i++) drawCrop(i);
+        renderAllWeatherCharts();
     }
 };
 
