@@ -1461,7 +1461,7 @@ window.updateCropSettings = function() {
     }
     
     // PDFが読み込まれていれば再描画
-    if (state.pdfDoc1 || state.pdfDoc2) {
+    if (state.pdfFiles && state.pdfFiles.length > 0) {
         // 現在の日付に合わせて再描画（extractWeatherMap内で必要な再描画処理が呼ばれるよう、CSV再処理を呼ぶのが一番確実）
         renderAllWeatherCharts();
     }
