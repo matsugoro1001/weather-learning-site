@@ -66,7 +66,7 @@ function switchTab(tabId) {
     });
 
     // 全てのナビゲーションボタンのアクティブ状態を解除
-    document.querySelectorAll('.nav-tab').forEach(btn => {
+    document.querySelectorAll('.nav-tab, .btn-navbar-cta').forEach(btn => {
         btn.classList.remove('active');
     });
 
@@ -77,7 +77,7 @@ function switchTab(tabId) {
     }
 
     // 対応するナビゲーションボタンをアクティブに
-    const targetBtn = document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
+    const targetBtn = document.querySelector(`[data-tab="${tabId}"]`);
     if (targetBtn) {
         targetBtn.classList.add('active');
     }
@@ -97,7 +97,7 @@ window.switchTab = switchTab;
 
 // ナビゲーションの初期化とハッシュ連動
 function initNavigation() {
-    document.querySelectorAll('.nav-tab').forEach(btn => {
+    document.querySelectorAll('.nav-tab, .btn-navbar-cta').forEach(btn => {
         btn.addEventListener('click', () => {
             const tabId = btn.getAttribute('data-tab');
             if (tabId) {
