@@ -104,7 +104,11 @@
 
         <section class="control-group">
             <h2>3. PDFとして保存</h2>
-            <p class="help-text" style="margin-bottom: 8px;">入力したデータから作成された資料を、一度手元にPDFとして保存します。</p>
+            <p class="help-text" style="margin-bottom: 8px;">プリントに印刷されるグループと名前を入力してから、PDFとして保存します。</p>
+            <div class="control-row-inline" style="margin-bottom: 10px;">
+                <input type="text" id="student-group" placeholder="グループ" style="width: 100px;">
+                <input type="text" id="student-name" placeholder="名前" style="flex-grow: 1;">
+            </div>
             <button class="btn btn-success btn-block" onclick="window.print()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: middle;">
                     <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm7 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/>
@@ -114,11 +118,7 @@
 
         <section class="control-group">
             <h2>4. 先生へ提出（アップロード）</h2>
-            <p class="help-text" style="margin-bottom: 8px;">自分の名前を入力し、上で保存したPDFを選んで提出します。</p>
-            <div class="control-row-inline" style="margin-bottom: 10px;">
-                <input type="text" id="student-group" placeholder="グループ" style="width: 100px;">
-                <input type="text" id="student-name" placeholder="名前" style="flex-grow: 1;">
-            </div>
+            <p class="help-text" style="margin-bottom: 8px;">上で保存したPDFを選んで提出します。</p>
             <div class="file-input-wrapper">
                 <button class="btn btn-secondary btn-file btn-sm">保存したPDFを選ぶ
                     <input type="file" id="submit-pdf-file" accept="application/pdf, image/jpeg, image/png" onchange="document.getElementById('submit-pdf-name').innerText = this.files.length > 0 ? this.files[0].name : '選択されていません'">
@@ -223,6 +223,6 @@
 
 
 
-    <script src="app.js?v=20260916-4"></script>
+    <script src="app.js?v=20260916-5"></script>
 </body>
 </html>
