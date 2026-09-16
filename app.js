@@ -42,7 +42,7 @@ const state = {
         humMax: 100
     },
     locationName: "軽井沢",
-    displayMode: "image", // "text" (天気図のみ/テキスト抽出) もしくは "image" (天気図+説明画像丸ごと)
+    displayMode: "text", // "text" (天気図のみ/テキスト抽出) もしくは "image" (天気図+説明画像丸ごと)
     extractedImages: {}, // 一括切り出しした全日程の画像 (キー: 日, 値: base64 DataURL)
     isExtracting: false
 };
