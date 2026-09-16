@@ -510,7 +510,7 @@ async function handleCalendarPdfUpload(e, slotNum) {
         });
 
         const typedarray = new Uint8Array(arrayBuffer);
-        const pdfDoc = await pdfjsLib.getDocument({ data: typedarray, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/cmaps/', cMapPacked: true }).promise;
+        const pdfDoc = await pdfjsLib.getDocument({ data: typedarray, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/cmaps/', cMapPacked: true, standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/standard_fonts/' }).promise;
 
         // 既存のスロットがあれば更新、なければ追加
         const pdfInfo = {
