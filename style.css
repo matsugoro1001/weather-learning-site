@@ -35,7 +35,43 @@ body {
     color: var(--text-main);
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     overflow-x: hidden;
+}
+
+/* アプリケーションメインラッパー */
+.app-main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 100%;
+}
+
+/* タブパネルの基本表示制御 */
+.tab-panel {
+    display: none;
+    width: 100%;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* プリント作成ツール（tab-generator）のアクティブ時レイアウト */
+.tab-panel.generator-wrapper.active {
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 64px);
+    overflow: hidden;
+}
+
+.tab-panel.generator-wrapper .dashboard {
+    height: 100%;
+}
+
+.tab-panel.generator-wrapper .page-container {
+    height: 100%;
 }
 
 /* ==========================================================================
@@ -512,15 +548,27 @@ input[type="range"]::-webkit-slider-thumb:hover {
     html, body {
         background: #ffffff !important;
         color: #000000 !important;
-        height: auto;
-        overflow: visible;
-        width: 100%;
+        height: auto !important;
+        overflow: visible !important;
+        width: 100% !important;
+        display: block !important;
     }
 
-    /* 管理ダッシュボードは非表示 */
+    /* 管理ダッシュボードやナビゲーション、ポータル画面は非表示 */
     .no-print,
-    .dashboard {
+    .dashboard,
+    .global-navbar,
+    .tab-panel:not(.generator-wrapper) {
         display: none !important;
+    }
+
+    .app-main-content,
+    .generator-wrapper {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     .page-container {
@@ -759,5 +807,1142 @@ input:checked + .slider:before {
     display: none !important; /* テキスト説明エリアを非表示にする */
 }
 
+/* ==========================================================================
+   気象探究ポータルサイト スタイル定義
+   ========================================================================== */
 
+/* --------------------------------------------------------------------------
+   1. グローバルナビゲーションヘッダー
+   -------------------------------------------------------------------------- */
+.global-navbar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 100;
+    height: 64px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
 
+.navbar-container {
+    max-width: 1300px;
+    height: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.brand-icon {
+    font-size: 1.8rem;
+    filter: drop-shadow(0 2px 8px rgba(56, 189, 248, 0.4));
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.brand-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.navbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 4px 0;
+    scrollbar-width: none;
+}
+
+.navbar-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.nav-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #94a3b8;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.nav-tab:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-tab.active {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.3);
+    font-weight: 600;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+}
+
+.nav-tab.nav-tab-generator {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(56, 189, 248, 0.25) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #e0f2fe;
+}
+
+.nav-tab.nav-tab-generator:hover {
+    background: linear-gradient(135deg, rgba(14, 165, 233, 0.35) 0%, rgba(56, 189, 248, 0.4) 100%);
+    color: #ffffff;
+}
+
+.nav-tab.nav-tab-generator.active {
+    background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+    color: #ffffff;
+    border-color: #38bdf8;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+}
+
+.tab-icon {
+    font-size: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   2. ポータル共通レイアウト
+   -------------------------------------------------------------------------- */
+.portal-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 36px 20px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.panel-header {
+    margin-bottom: 8px;
+}
+
+.panel-header-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--primary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.panel-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+}
+
+.panel-desc {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.portal-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* --------------------------------------------------------------------------
+   3. ヒーローバナー
+   -------------------------------------------------------------------------- */
+.hero-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 58, 138, 0.6) 50%, rgba(14, 116, 144, 0.5) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 20px;
+    padding: 36px 32px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hero-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(56, 189, 248, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.hero-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    line-height: 1.3;
+}
+
+.hero-subtitle {
+    font-size: 1.05rem;
+    color: #cbd5e1;
+    line-height: 1.7;
+    margin-bottom: 24px;
+    max-width: 800px;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.btn-hero {
+    padding: 12px 20px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-video {
+    background: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+.btn-video:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+}
+
+.btn-doc {
+    background: #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+}
+.btn-doc:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+}
+
+.btn-primary-hero {
+    background: #0ea5e9;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+}
+.btn-primary-hero:hover {
+    background: #0284c7;
+    transform: translateY(-2px);
+}
+
+/* --------------------------------------------------------------------------
+   4. 手紙カード（視聴者メール）
+   -------------------------------------------------------------------------- */
+.letter-card {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.card-header-with-badge {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+
+.portal-card-tag {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #f59e0b;
+}
+
+.letter-to {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.letter-greeting {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #e2e8f0;
+    margin-bottom: 14px;
+}
+
+.letter-highlight-box {
+    background: rgba(15, 23, 42, 0.6);
+    border-left: 4px solid #38bdf8;
+    padding: 16px 20px;
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 16px;
+    color: #f1f5f9;
+    line-height: 1.75;
+}
+
+.letter-highlight-box strong {
+    color: #38bdf8;
+}
+
+.letter-highlight-box ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.letter-closing {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #10b981;
+    text-align: right;
+}
+
+/* --------------------------------------------------------------------------
+   5. 意識してほしい3つのポイント
+   -------------------------------------------------------------------------- */
+.section-heading {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.heading-icon {
+    font-size: 1.25rem;
+}
+
+.points-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.point-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.point-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.point-number {
+    display: inline-block;
+    width: fit-content;
+    padding: 2px 10px;
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.point-card h4 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.4;
+}
+
+.point-card p {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    line-height: 1.6;
+}
+
+.point-list {
+    padding-left: 18px;
+    font-size: 0.82rem;
+    color: #cbd5e1;
+    line-height: 1.55;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.point-example {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    color: #38bdf8;
+    line-height: 1.5;
+}
+
+/* クイックフッターナビ */
+.portal-footer-nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.footer-nav-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.footer-nav-card:hover {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.3);
+    transform: translateY(-2px);
+}
+
+.fn-icon {
+    font-size: 1.6rem;
+}
+
+.fn-text strong {
+    display: block;
+    font-size: 0.88rem;
+    color: #ffffff;
+    margin-bottom: 2px;
+}
+
+.fn-text span {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* --------------------------------------------------------------------------
+   6. ルーブリックテーブル
+   -------------------------------------------------------------------------- */
+.rubric-table-wrapper {
+    overflow-x: auto;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(30, 41, 59, 0.6);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.rubric-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+}
+
+.rubric-table th {
+    padding: 14px 16px;
+    font-weight: 700;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    background: rgba(15, 23, 42, 0.8);
+}
+
+.col-perspective { width: 14%; }
+.col-item { width: 20%; }
+.col-rank { width: 22%; }
+
+.rubric-table th.rank-a {
+    color: #34d399;
+    border-top: 3px solid #10b981;
+}
+
+.rubric-table th.rank-b {
+    color: #38bdf8;
+    border-top: 3px solid #0ea5e9;
+}
+
+.rubric-table th.rank-c {
+    color: #94a3b8;
+    border-top: 3px solid #64748b;
+}
+
+.rubric-table td {
+    padding: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    vertical-align: top;
+    line-height: 1.6;
+}
+
+.cell-perspective {
+    background: rgba(15, 23, 42, 0.3);
+    font-weight: 600;
+}
+
+.perspective-tag {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.perspective-knowledge .perspective-tag {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.perspective-thinking .perspective-tag {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.perspective-attitude .perspective-tag {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.cell-item strong {
+    color: #f1f5f9;
+    font-size: 0.9rem;
+}
+
+.booklet-ref {
+    display: inline-block;
+    font-size: 0.72rem;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+.cell-criteria {
+    position: relative;
+}
+
+.cell-criteria.rank-a {
+    background: rgba(16, 185, 129, 0.03);
+}
+
+.criteria-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+}
+
+.a-badge { background: #10b981; color: #ffffff; }
+.b-badge { background: #0ea5e9; color: #ffffff; }
+.c-badge { background: #64748b; color: #ffffff; }
+
+.criteria-text {
+    color: #e2e8f0;
+    margin-bottom: 6px;
+}
+
+.criteria-example {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    background: rgba(15, 23, 42, 0.4);
+    padding: 8px 10px;
+    border-radius: 6px;
+    line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   7. 授業予定タイムライン
+   -------------------------------------------------------------------------- */
+.schedule-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.schedule-row {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.schedule-row:hover {
+    background: rgba(30, 41, 59, 0.85);
+    transform: translateX(4px);
+    border-color: rgba(56, 189, 248, 0.2);
+}
+
+.schedule-row.schedule-bh {
+    border-left: 4px solid #a855f7;
+    background: rgba(168, 85, 247, 0.05);
+}
+
+.schedule-row.schedule-goal {
+    border-left: 4px solid #10b981;
+    background: rgba(16, 185, 129, 0.08);
+}
+
+.schedule-date-badge {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: rgba(15, 23, 42, 0.8);
+    padding: 6px 14px;
+    border-radius: 8px;
+    white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    width: 140px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.schedule-content {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.schedule-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.schedule-main h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #f1f5f9;
+}
+
+.schedule-phase {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.phase-intro { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+.phase-lecture { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.phase-work { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+.phase-explore { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.phase-bh { background: rgba(168, 85, 247, 0.2); color: #c084fc; }
+.phase-creation { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
+.phase-showcase { background: rgba(250, 204, 21, 0.25); color: #fde047; }
+
+.schedule-lesson {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+.lesson-tag {
+    background: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   8. 利用できるサイト一覧カード
+   -------------------------------------------------------------------------- */
+.sites-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.site-card {
+    background: rgba(30, 41, 59, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.site-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(56, 189, 248, 0.3);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.site-card-featured {
+    grid-column: span 2;
+    background: linear-gradient(135deg, rgba(30, 58, 138, 0.35) 0%, rgba(30, 41, 59, 0.75) 100%);
+    border: 1.5px solid rgba(56, 189, 248, 0.4);
+}
+
+.site-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.site-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.tag-primary { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+.tag-visual { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.tag-data { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.tag-official { background: rgba(99, 102, 241, 0.2); color: #a5b4fc; }
+.tag-study { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
+
+.site-icon {
+    font-size: 1.6rem;
+}
+
+.site-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.3;
+}
+
+.site-role {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #38bdf8;
+}
+
+.site-desc {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    line-height: 1.6;
+    flex-grow: 1;
+}
+
+.site-action {
+    margin-top: 8px;
+}
+
+.site-action a,
+.site-action button {
+    text-decoration: none;
+    text-align: center;
+}
+
+.site-action-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.btn-outline-primary {
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+}
+.btn-outline-primary:hover {
+    background: var(--primary);
+    color: #0f172a;
+}
+
+.btn-youtube {
+    background: #ff0000;
+    color: #ffffff;
+}
+.btn-youtube:hover {
+    background: #cc0000;
+}
+
+/* --------------------------------------------------------------------------
+   9. 授業動画・参考資料カード
+   -------------------------------------------------------------------------- */
+.drive-links-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.drive-card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.drive-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(56, 189, 248, 0.35);
+}
+
+.drive-card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.drive-icon {
+    font-size: 2.2rem;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.drive-category {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #38bdf8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.drive-card h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.drive-desc {
+    font-size: 0.88rem;
+    color: #94a3b8;
+    line-height: 1.65;
+}
+
+.drive-badge-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.badge-item {
+    font-size: 0.75rem;
+    background: rgba(15, 23, 42, 0.5);
+    color: #cbd5e1;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.btn-drive {
+    padding: 14px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-drive-video {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+.btn-drive-video:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+}
+
+.btn-drive-doc {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+}
+.btn-drive-doc:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    transform: translateY(-2px);
+}
+
+.notice-box {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    line-height: 1.6;
+}
+
+.notice-icon {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   10. 観天望気・思考ツール
+   -------------------------------------------------------------------------- */
+.lore-about-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 14px;
+    padding: 20px 24px;
+}
+
+.lore-about-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #38bdf8;
+    margin-bottom: 8px;
+}
+
+.lore-about-card p {
+    font-size: 0.88rem;
+    color: #cbd5e1;
+    line-height: 1.7;
+}
+
+.lore-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.lore-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 20px;
+}
+
+.lore-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.lore-icon {
+    font-size: 1.3rem;
+}
+
+.lore-card-header h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.lore-note {
+    font-size: 0.75rem;
+    color: #f59e0b;
+    margin-bottom: 10px;
+}
+
+.lore-list {
+    padding-left: 20px;
+    font-size: 0.85rem;
+    color: #cbd5e1;
+    line-height: 1.7;
+}
+
+.caution-lore {
+    text-decoration: underline wavy #ef4444;
+    color: #fca5a5;
+}
+
+.tools-and-books-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 6px;
+}
+
+.card-intro {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.tool-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tool-box {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+.tool-box strong {
+    font-size: 0.88rem;
+    color: #38bdf8;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.tool-box p {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    line-height: 1.5;
+}
+
+.books-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.books-list li {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.books-list strong {
+    font-size: 0.88rem;
+    color: #f1f5f9;
+}
+
+.books-list span {
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.dashboard-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    font-size: 0.68rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+/* --------------------------------------------------------------------------
+   11. レスポンシブ対応 (Mobile & Tablet)
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+    .points-grid,
+    .sites-grid,
+    .drive-links-container,
+    .lore-grid,
+    .tools-and-books-grid,
+    .portal-footer-nav {
+        grid-template-columns: 1fr;
+    }
+
+    .site-card-featured {
+        grid-column: span 1;
+    }
+
+    .schedule-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .tab-panel.generator-wrapper.active {
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+    }
+
+    .tab-panel.generator-wrapper .dashboard {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--panel-border);
+    }
+}

@@ -48,14 +48,77 @@ const state = {
 };
 
 // ==========================================================================
-// 1. 起動時の初期化
+// 1. 起動時の初期化 & ナビゲーション
 // ==========================================================================
 window.addEventListener('DOMContentLoaded', () => {
+    initNavigation();
     initEventListeners();
     loadDefaultData();
     updateLocationDisplay();
     setupCanvasDrag();
 });
+
+// ポータルタブ切り替え関数
+function switchTab(tabId) {
+    // 全てのタブパネルを非表示
+    document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.remove('active');
+    });
+
+    // 全てのナビゲーションボタンのアクティブ状態を解除
+    document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // 指定されたタブパネルを表示
+    const targetPanel = document.getElementById(tabId);
+    if (targetPanel) {
+        targetPanel.classList.add('active');
+    }
+
+    // 対応するナビゲーションボタンをアクティブに
+    const targetBtn = document.querySelector(`.nav-tab[data-tab="${tabId}"]`);
+    if (targetBtn) {
+        targetBtn.classList.add('active');
+    }
+
+    // URLハッシュを更新
+    const hash = tabId.replace('tab-', '');
+    if (window.location.hash !== `#${hash}`) {
+        window.history.replaceState(null, '', `#${hash}`);
+    }
+
+    // 画面上部へスクロール（プリント作成ツール以外）
+    if (tabId !== 'tab-generator') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+window.switchTab = switchTab;
+
+// ナビゲーションの初期化とハッシュ連動
+function initNavigation() {
+    document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.getAttribute('data-tab');
+            if (tabId) {
+                switchTab(tabId);
+            }
+        });
+    });
+
+    window.addEventListener('hashchange', initTabFromHash);
+    initTabFromHash();
+}
+
+function initTabFromHash() {
+    const hash = window.location.hash.replace('#', '');
+    const validTabs = ['mission', 'rubric', 'schedule', 'links', 'drive', 'lore', 'generator'];
+    if (hash && validTabs.includes(hash)) {
+        switchTab(`tab-${hash}`);
+    } else {
+        switchTab('tab-mission');
+    }
+}
 
 // イベントリスナーのセットアップ
 function initEventListeners() {
@@ -69,8 +132,6 @@ function initEventListeners() {
     // 提出情報の変更反映
     document.getElementById('student-group').addEventListener('input', updateStudentInfo);
     document.getElementById('student-name').addEventListener('input', updateStudentInfo);
-
-
 }
 
 // 初期デフォルトデータのロード（ワークスペース内の data.csv をフェッチ）

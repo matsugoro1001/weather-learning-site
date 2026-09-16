@@ -12,217 +12,1163 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&family=Kiwi+Maru:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- 管理用ダッシュボード（画面表示時のみ左側に表示） -->
-    <aside class="dashboard no-print">
-        <header class="dashboard-header">
-            <h1>気象学習コントロール</h1>
-            <p class="subtitle">データの入力と資料の自動生成</p>
-        </header>
-
-        <section class="control-group">
-            <h2>1. 気象データ入力 (CSV)</h2>
-            <div class="file-input-wrapper">
-                <button class="btn btn-primary btn-file">CSVファイルを選択
-                    <input type="file" id="csv-file" accept=".csv">
+    <!-- ======================================================================
+         1. グローバルナビゲーションヘッダー (印刷時は非表示)
+         ====================================================================== -->
+    <header class="global-navbar no-print">
+        <div class="navbar-container">
+            <div class="navbar-brand" onclick="switchTab('tab-mission')">
+                <span class="brand-icon">⛅</span>
+                <div class="brand-text">
+                    <span class="brand-badge">中2理科 気象探究</span>
+                    <h1 class="brand-title">『私にとって、忘れない特別な1日』</h1>
+                </div>
+            </div>
+            <nav class="navbar-nav">
+                <button class="nav-tab active" data-tab="tab-mission">
+                    <span class="tab-icon">🎯</span><span class="tab-label">課題・めあて</span>
                 </button>
-                <span id="csv-filename" class="file-name">選択されていません (default_data使用中)</span>
-            </div>
-            <p class="help-text">気象庁からダウンロードした1時間ごとのCSVデータを読み込めます。</p>
-            <p class="link-text"><a href="https://www.data.jma.go.jp/risk/obsdl/index.php" target="_blank" rel="noopener noreferrer">「気象データ」ここから</a></p>
-            <div class="link-text obs-instructions mt-2 pt-2 border-top" style="border-top: 1px dashed #cbd5e1;">
-                <span style="font-weight: 700; color: #475569; display: block; margin-bottom: 4px; font-size: 0.78rem;">📊 ダウンロード手順：</span>
-                <ul style="padding-left: 16px; margin: 0; color: #64748b; font-size: 0.75rem; line-height: 1.45;">
-                    <li style="margin-bottom: 2px;"><strong>地点</strong>：地図上の <span style="color: #ef4444; font-weight: bold;">赤い◎</span> を選ぶ</li>
-                    <li style="margin-bottom: 2px;"><strong>項目</strong>：「時別値」の「気温、風向・風速、現地気圧、天気、相対湿度」を選ぶ</li>
-                    <li><strong>期間</strong>：「連続した期間で表示する」を選び、当日とその前後1日の3日間を選ぶ</li>
-                </ul>
-            </div>
-        </section>
-
-        <section class="control-group">
-            <h2>2. 天気図カレンダーのアップロード</h2>
-            <div class="calendar-inputs">
-                <div class="file-input-wrapper mb-2">
-                    <button class="btn btn-secondary btn-file btn-sm">カレンダー天気図 (PDF or 画像) 1
-                        <input type="file" id="cal-file-1" accept="application/pdf, image/jpeg, image/png">
-                    </button>
-                    <span id="cal-file-1-name" class="file-name">選択されていません</span>
-                </div>
-                <div class="file-input-wrapper">
-                    <button class="btn btn-secondary btn-file btn-sm">カレンダー天気図 (PDF or 画像) 2 (月またぎ用)
-                        <input type="file" id="cal-file-2" accept="application/pdf, image/jpeg, image/png">
-                    </button>
-                    <span id="cal-file-2-name" class="file-name">選択されていません</span>
-                </div>
-            </div>
-            <p class="help-text">気象庁の「日々の天気図」PDF（1ヶ月分）をアップロードします。月をまたぐ日程がある場合はPDF 2も使用してください。</p>
-            <p class="link-text"><a href="https://www.data.jma.go.jp/yoho/hibiten/index.html" target="_blank" rel="noopener noreferrer">「天気図データ」ここから</a></p>
-
-            <details style="margin-top: 10px; margin-bottom: 5px;">
-                <summary style="cursor: pointer; font-size: 0.9em;  font-weight: bold;">⚙️ 天気図がズレる場合の微調整</summary>
-                <div style="padding: 10px; background: rgba(0,0,0,0.1); border: 1px solid rgba(128,128,128,0.3); border-radius: 4px; margin-top: 5px;">
-                    <div style="font-size: 0.75em; color: #f59e0b; margin-bottom: 10px; line-height: 1.4;">
-                        ※気象庁のPDFは発行月によって余白が微妙に異なるため、ズレる場合があります。<br>
-                        右側のプレビュー画面を見ながら、枠にピッタリ収まるように数値を調整してください。
-                    </div>
-                    
-                    <div style="margin-bottom: 12px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.8em; margin-bottom: 2px;">
-                            <span>⬅️ 枠の中の天気図を【左右】に動かす ➡️</span>
-                            <span id="val-x" style="font-weight: bold;">4.7</span>
-                        </div>
-                        <input type="range" id="adj-x" min="0" max="15" step="0.1" value="4.7" oninput="updateCropSettings()" style="width: 100%;">
-                    </div>
-                    
-                    <div style="margin-bottom: 12px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.8em; margin-bottom: 2px;">
-                            <span>⬆️ 枠の中の天気図を【上下】に動かす ⬇️</span>
-                            <span id="val-y" style="font-weight: bold;">1.8</span>
-                        </div>
-                        <input type="range" id="adj-y" min="0" max="15" step="0.1" value="1.8" oninput="updateCropSettings()" style="width: 100%;">
-                    </div>
-                    
-                    <div style="margin-bottom: 12px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.8em; margin-bottom: 2px;">
-                            <span>↔️ 天気図の【横幅】を調整（右に行くほどズレる場合）</span>
-                            <span id="val-w" style="font-weight: bold;">94.9</span>
-                        </div>
-                        <input type="range" id="adj-w" min="80" max="100" step="0.1" value="94.9" oninput="updateCropSettings()" style="width: 100%;">
-                    </div>
-                    
-                    <div style="margin-bottom: 5px;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.8em; margin-bottom: 2px;">
-                            <span>↕️ 天気図の【縦幅】を調整（下段がズレる場合）</span>
-                            <span id="val-h" style="font-weight: bold;">94.2</span>
-                        </div>
-                        <input type="range" id="adj-h" min="80" max="100" step="0.1" value="94.2" oninput="updateCropSettings()" style="width: 100%;">
-                    </div>
-                </div>
-            </details>
-
-        </section>
-
-        <section class="control-group">
-            <h2>3. PDFとして保存</h2>
-            <p class="help-text" style="margin-bottom: 8px;">プリントに印刷されるグループと名前を入力してから、PDFとして保存します。</p>
-            <div class="control-row-inline" style="margin-bottom: 10px;">
-                <input type="text" id="student-group" placeholder="グループ" style="width: 100px;">
-                <input type="text" id="student-name" placeholder="名前" style="flex-grow: 1;">
-            </div>
-            <button class="btn btn-success btn-block" onclick="window.print()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: middle;">
-                    <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm7 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/>
-                </svg>PDFとして保存・印刷
-            </button>
-        </section>
-
-        <section class="control-group">
-            <h2>4. 先生へ提出（アップロード）</h2>
-            <p class="help-text" style="margin-bottom: 8px;">上で保存したPDFを選んで提出します。</p>
-            <div class="file-input-wrapper">
-                <button class="btn btn-secondary btn-file btn-sm">保存したPDFを選ぶ
-                    <input type="file" id="submit-pdf-file" accept="application/pdf, image/jpeg, image/png" onchange="document.getElementById('submit-pdf-name').innerText = this.files.length > 0 ? this.files[0].name : '選択されていません'">
+                <button class="nav-tab" data-tab="tab-rubric">
+                    <span class="tab-icon">📊</span><span class="tab-label">ルーブリック</span>
                 </button>
-                <span id="submit-pdf-name" class="file-name">選択されていません</span>
+                <button class="nav-tab" data-tab="tab-schedule">
+                    <span class="tab-icon">📅</span><span class="tab-label">授業予定</span>
+                </button>
+                <button class="nav-tab" data-tab="tab-links">
+                    <span class="tab-icon">🔗</span><span class="tab-label">利用サイト一覧</span>
+                </button>
+                <button class="nav-tab" data-tab="tab-drive">
+                    <span class="tab-icon">📁</span><span class="tab-label">動画・資料</span>
+                </button>
+                <button class="nav-tab" data-tab="tab-lore">
+                    <span class="tab-icon">💡</span><span class="tab-label">観天望気・ツール</span>
+                </button>
+                <button class="nav-tab nav-tab-generator" data-tab="tab-generator">
+                    <span class="tab-icon">🖨️</span><span class="tab-label">プリント作成</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ======================================================================
+         2. アプリケーション本体コンテンツコンテナ
+         ====================================================================== -->
+    <div class="app-main-content">
+
+        <!-- ==========================================
+             TAB 1: 課題・めあて (Mission)
+             ========================================== -->
+        <section id="tab-mission" class="tab-panel active no-print">
+            <div class="portal-container">
+                <!-- ヒーローバナー -->
+                <div class="hero-card">
+                    <div class="hero-badge">探究課題ミッション</div>
+                    <h2 class="hero-title">大日向TV お天気情報番組をつくろう！</h2>
+                    <p class="hero-subtitle">
+                        あなたは気象予報士であり、大日向TVお天気番組の放送作家です。<br>
+                        視聴者からの「特別な1日」の相談に応え、科学的根拠に基づいた最高のアドバイスを届けましょう！
+                    </p>
+                    <div class="hero-actions">
+                        <a href="https://drive.google.com/drive/folders/1jyatzgB6JkxwR0Z9dQuqXE9kdFIy8q7K" target="_blank" rel="noopener noreferrer" class="btn btn-hero btn-video">
+                            🎥 授業動画を見る
+                        </a>
+                        <a href="https://drive.google.com/drive/folders/19cjopV36FKv1xYZJEVPs593MDkREa0Sa?usp=drive_link" target="_blank" rel="noopener noreferrer" class="btn btn-hero btn-doc">
+                            📚 参考資料・先輩の作品
+                        </a>
+                        <button onclick="switchTab('tab-generator')" class="btn btn-hero btn-primary-hero">
+                            🖨️ プリント作成ツールへ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 視聴者からのメール -->
+                <div class="portal-card letter-card">
+                    <div class="card-header-with-badge">
+                        <span class="portal-card-tag">📩 視聴者からの相談メール</span>
+                        <span class="letter-to">番組宛て：『今日の観天望気』係 御中</span>
+                    </div>
+                    <div class="letter-content">
+                        <p class="letter-greeting">いつも楽しくみています。特に『今日の観天望気』のコーナーが大好きです。今日はお願いがあってメールしました。</p>
+                        <div class="letter-highlight-box">
+                            <p><strong>●月●日</strong>に、<strong>●●（場所）</strong>で<strong>●●</strong>があって、<strong>『私にとって忘れられない特別な日』</strong>になります。</p>
+                            <p>どんな天気になっても最高の思い出にしたいので、前日に、</p>
+                            <ul>
+                                <li>その日がどんな天気になりそうなのか？</li>
+                                <li>具体的にどのような準備をして、どのような心構えでいたらいいか？</li>
+                            </ul>
+                            <p>アドバイスがほしいです。お天気情報番組で取り扱っていただけませんか？</p>
+                        </div>
+                        <p class="letter-closing">── 視聴者の希望にそえるような、魅力あふれるお天気情報番組を作成しましょう！</p>
+                    </div>
+                </div>
+
+                <!-- 今回の授業で意識してほしい3つのこと -->
+                <h3 class="section-heading"><span class="heading-icon">✨</span> 今回の授業で意識してほしい3つのポイント</h3>
+                <div class="points-grid">
+                    <div class="point-card">
+                        <div class="point-number">Point 1</div>
+                        <h4>現象のつながり（相関関係）を考える</h4>
+                        <p>「ツバメが低く飛ぶと雨がふる」などの観天望気について、「なぜ？根拠は？」と疑問を持って調べて考えよう！</p>
+                        <div class="point-example">
+                            <strong>思考の型：</strong><br>
+                            「〇〇が原因で、□□が引き起こされている」を自分の言葉で順序立てて説明することにチャレンジしよう。
+                        </div>
+                    </div>
+
+                    <div class="point-card">
+                        <div class="point-number">Point 2</div>
+                        <h4>時間的視点と空間的視点、そのつながり</h4>
+                        <p>気象のデータを立体的・多角的に捉えよう！</p>
+                        <ul class="point-list">
+                            <li><strong>時間的視点：</strong> 気象要素（気温・湿度・気圧など）は時間とともにどう変化しているか？</li>
+                            <li><strong>空間的視点：</strong> A地点と似た天気になるのはどの地点か？日本全体の等圧線や前線はどうなっているか？</li>
+                            <li><strong>相互のつながり：</strong> 例えば「5時間後、A地点と同じ天気になるのはどの地点か？それはなぜか」を見つけ出そう！</li>
+                        </ul>
+                    </div>
+
+                    <div class="point-card">
+                        <div class="point-number">Point 3</div>
+                        <h4>ペルソナ（受け手への提案）</h4>
+                        <p>この気象番組を誰に届けたいのか、その人はどんな情報を一番聞きたいのかを考えよう！</p>
+                        <div class="point-example">
+                            単に「雨が降ります」と伝えるだけでなく、相手の立場に立って<strong>「だから〇〇を準備しよう」「〇〇の心構えをしておこう」</strong>という具体的な行動パターンを提案しよう！
+                        </div>
+                    </div>
+                </div>
+
+                <!-- クイックナビゲーションバナー -->
+                <div class="portal-footer-nav">
+                    <div class="footer-nav-card" onclick="switchTab('tab-rubric')">
+                        <div class="fn-icon">📊</div>
+                        <div class="fn-text">
+                            <strong>ルーブリックを見る</strong>
+                            <span>めあてとA/B/C評価基準を確認</span>
+                        </div>
+                    </div>
+                    <div class="footer-nav-card" onclick="switchTab('tab-schedule')">
+                        <div class="fn-icon">📅</div>
+                        <div class="fn-text">
+                            <strong>予定・ミニレッスン</strong>
+                            <span>今後の授業スケジュールを確認</span>
+                        </div>
+                    </div>
+                    <div class="footer-nav-card" onclick="switchTab('tab-links')">
+                        <div class="fn-icon">🔗</div>
+                        <div class="fn-text">
+                            <strong>利用できるサイト一覧</strong>
+                            <span>気象庁、earth、Windyなどの外部ツール</span>
+                        </div>
+                    </div>
+                    <div class="footer-nav-card" onclick="switchTab('tab-lore')">
+                        <div class="fn-icon">💡</div>
+                        <div class="fn-text">
+                            <strong>観天望気・思考ツール</strong>
+                            <span>ことわざ一覧・おすすめ本・思考の枠組み</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button class="btn btn-success btn-block" id="submit-btn" onclick="uploadPdfToDrive()" style="margin-top: 10px; background-color: #0ea5e9;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: middle;">
-                    <path fill-rule="evenodd" d="M8 0a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 1 1 .708-.708L7.5 12.293V.5A.5.5 0 0 1 8 0z"/>
-                    <path d="M1 14.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5z"/>
-                </svg>ドライブへ提出する
-            </button>
         </section>
-    </aside>
 
-    <!-- 印刷用・プレビュー用A4用紙（実物） -->
-    <main class="page-container">
-        <article class="a4-sheet" id="a4-sheet-preview">
-            <!-- 提出用名前欄（プレビュー画面のみ、印刷時は表示） -->
-            <div class="student-info-print">
-                <span id="print-group">グループ：＿＿＿＿</span>
-                <span id="print-name">名前：＿＿＿＿＿＿＿＿</span>
+        <!-- ==========================================
+             TAB 2: ルーブリック (Rubric)
+             ========================================== -->
+        <section id="tab-rubric" class="tab-panel no-print">
+            <div class="portal-container">
+                <div class="panel-header">
+                    <div class="panel-header-badge">学習評価基準</div>
+                    <h2 class="panel-title">気象探究ルーブリック</h2>
+                    <p class="panel-desc">毎回の探究活動でめあてを持ち、自分の学びをセルフチェックしましょう。目指せA評価！</p>
+                </div>
+
+                <div class="rubric-table-wrapper">
+                    <table class="rubric-table">
+                        <thead>
+                            <tr>
+                                <th class="col-perspective">観点</th>
+                                <th class="col-item">評価項目・該当ページ</th>
+                                <th class="col-rank rank-a">A基準（目指す姿）</th>
+                                <th class="col-rank rank-b">B基準（達成基準）</th>
+                                <th class="col-rank rank-c">C基準（基礎）</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 知識・技能 -->
+                            <tr>
+                                <td class="cell-perspective perspective-knowledge" rowspan="1">
+                                    <span class="perspective-tag">知識・技能</span>
+                                </td>
+                                <td class="cell-item">
+                                    <strong>データの読み取りと整理</strong><br>
+                                    <span class="booklet-ref">【冊子6のA・B】</span>
+                                </td>
+                                <td class="cell-criteria rank-a">
+                                    <div class="criteria-badge a-badge">A</div>
+                                    <p class="criteria-text">その日の天気を<strong>天気図とグラフの両方の情報</strong>をもとに正しく判断できている。</p>
+                                    <div class="criteria-example">
+                                        （例：「1日中湿度が変わらないから曇り」「西高東低の冬型の気圧配置、高気圧があるから晴れ」など）
+                                    </div>
+                                </td>
+                                <td class="cell-criteria rank-b">
+                                    <div class="criteria-badge b-badge">B</div>
+                                    <p class="criteria-text">その日の天気を<strong>天気図の情報をもとに正しく判断</strong>できている。</p>
+                                    <div class="criteria-example">
+                                        （例：「寒冷前線があるから雨」「高気圧におおわれているから晴れ」など）
+                                    </div>
+                                </td>
+                                <td class="cell-criteria rank-c">
+                                    <div class="criteria-badge c-badge">C</div>
+                                    <p class="criteria-text">その日の天気図にある<strong>天気図記号の名称と大まかな意味</strong>がわかる。</p>
+                                    <div class="criteria-example">
+                                        （例：「寒冷前線は雨を降らせる前線」「◎は曇り」など）
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 思考・判断・表現 1 -->
+                            <tr>
+                                <td class="cell-perspective perspective-thinking" rowspan="2">
+                                    <span class="perspective-tag">思考・判断・表現</span>
+                                </td>
+                                <td class="cell-item">
+                                    <strong>天気の変化の分析</strong><br>
+                                    <span class="booklet-ref">【冊子6のC ＋ 動画】</span>
+                                </td>
+                                <td class="cell-criteria rank-a">
+                                    <div class="criteria-badge a-badge">A</div>
+                                    <p class="criteria-text"><strong>「いつ・どこ・なぜ」</strong>を使って、その日の天気の理由を<strong>空間的視点と時間的視点</strong>で説明している。</p>
+                                    <div class="criteria-example">
+                                        （例：長野県付近に、14時頃に、寒冷前線が近づいたため、急に激しい雨が降った。など）
+                                    </div>
+                                </td>
+                                <td class="cell-criteria rank-b">
+                                    <div class="criteria-badge b-badge">B</div>
+                                    <p class="criteria-text"><strong>「どこ・なぜ」</strong>を使って、その日の天気の理由を<strong>空間的視点で説明</strong>している。</p>
+                                    <div class="criteria-example">
+                                        （例：長野県付近に、寒冷前線があるため、雨が降った。など）
+                                    </div>
+                                </td>
+                                <td class="cell-criteria rank-c">
+                                    <div class="criteria-badge c-badge">C</div>
+                                    <p class="criteria-text">「雨が降った」「気温が上がった」など、その日に起きた<strong>変化の事実を順番に説明</strong>している。</p>
+                                    <div class="criteria-example">
+                                        （例：朝は晴れていたが、昼の14時頃から雨が降って気温が下がった。など）
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 思考・判断・表現 2 -->
+                            <tr>
+                                <td class="cell-item">
+                                    <strong>観天望気の科学的な説明</strong><br>
+                                    <span class="booklet-ref">【冊子9 ＋ 動画】</span>
+                                </td>
+                                <td class="cell-criteria rank-a">
+                                    <div class="criteria-badge a-badge">A</div>
+                                    <p class="criteria-text">天気の変化と現象の理由を<strong>2段階以上のつながりで順序立てて説明</strong>している。</p>
+                                    <div class="criteria-example">
+                                        （例：雨の前は空気が湿る ➔ 虫の羽が重くなり低く飛ぶ ➔ それを食べるツバメも低く飛ぶ。など）
+                                    </div>
+                                </td>
+                                <td class="cell-criteria rank-b">
+                                    <div class="criteria-badge b-badge">B</div>
+                                    <p class="criteria-text">天気の変化と現象の理由を<strong>1対1で直接つなげて説明</strong>している。</p>
+                                    <div class="criteria-example">
+                                        （例：雨の前は空気が湿るから、ツバメが低く飛ぶ。など）
+                                    </div>
+                                </td>
+                                <td class="cell-criteria rank-c">
+                                    <div class="criteria-badge c-badge">C</div>
+                                    <p class="criteria-text">調べた観天望気の<strong>ことわざや言い伝えの内容を説明</strong>している。</p>
+                                    <div class="criteria-example">
+                                        （例：「ツバメが低く飛ぶと雨が降る」と言われている。など）
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 主体性 1 -->
+                            <tr>
+                                <td class="cell-perspective perspective-attitude" rowspan="2">
+                                    <span class="perspective-tag">主体的に学習に取り組む態度</span>
+                                </td>
+                                <td class="cell-item">
+                                    <strong>過去の自分への助言</strong><br>
+                                    <span class="booklet-ref">【冊子4 ＋ 動画】</span>
+                                </td>
+                                <td class="cell-criteria rank-a">
+                                    <div class="criteria-badge a-badge">A</div>
+                                    <p class="criteria-text">一般的な天気に加え、当時の自分が助かる<strong>具体的な行動のアドバイスが複数ある</strong>。</p>
+                                    <div class="criteria-example">
+                                        （例：「急な雨に備えて折りたたみ傘を持つだけでなく、気温低下に対応できるウィンドブレーカーを用意する」など）
+                                    </div>
+                                </td>
+                                <td class="cell-criteria rank-b">
+                                    <div class="criteria-badge b-badge">B</div>
+                                    <p class="criteria-text">一般的な天気に加え、当時の自分が助かる<strong>具体的な行動のアドバイスがある</strong>。</p>
+                                    <div class="criteria-example">
+                                        （例：「雨が降るから傘を持っていく」など）
+                                    </div>
+                                </td>
+                                <td class="cell-criteria rank-c">
+                                    <div class="criteria-badge c-badge">C</div>
+                                    <p class="criteria-text">明日の天気や気温など、<strong>一般的な天気予報の情報を整理して伝えている</strong>。</p>
+                                    <div class="criteria-example">
+                                        （例：「明日の最高気温は18度、午後は雨でしょう」など）
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- 主体性 2 -->
+                            <tr>
+                                <td class="cell-item">
+                                    <strong>計画と振り返り</strong><br>
+                                    <span class="booklet-ref">【冊子11】</span>
+                                </td>
+                                <td class="cell-criteria rank-a">
+                                    <div class="criteria-badge a-badge">A</div>
+                                    <p class="criteria-text"><strong>「今日やったこと／課題」を書き、自分で次の作戦（次回やること）を考えて進めている。</strong></p>
+                                    <div class="criteria-example">
+                                        （自己調整しながら主体的・自律的に探究を進めている状態）
+                                    </div>
+                                </td>
+                                <td class="cell-criteria rank-b">
+                                    <div class="criteria-badge b-badge">B</div>
+                                    <p class="criteria-text">予定表に合わせ、見通しを持って<strong>「次回やること」を書いている</strong>。</p>
+                                    <div class="criteria-example">
+                                        （スケジュールを意識して準備できている状態）
+                                    </div>
+                                </td>
+                                <td class="cell-criteria rank-c">
+                                    <div class="criteria-badge c-badge">C</div>
+                                    <p class="criteria-text">毎時間の終わりに、<strong>「今日やったこと」を振り返って記録している</strong>。</p>
+                                    <div class="criteria-example">
+                                        （活動の記録を継続して行えている状態）
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
+        </section>
 
-            <section class="section-weather-charts">
-                <h2 class="section-title">5．『私にとって、忘れられない特別な1日』の前後の天気図は…</h2>
-                
-                <div class="weather-charts-grid">
-                    <!-- 1日目 -->
-                    <div class="chart-item display-mode-image">
-                        <div class="chart-date-header">
-                            <span class="date-month-fill" id="chart-month-1">　</span>月<span class="date-day-fill" id="chart-day-1">　</span>日
-                        </div>
-                        <div class="chart-image-container">
-                            <img id="weather-map-1" src="output/default_chart1.png" alt="天気図1日目">
-                            <canvas id="crop-canvas-1" style="display:none;"></canvas>
-                        </div>
-                        <div class="chart-description">
-                            <strong id="desc-title-1">1日目</strong>
-                            <p id="desc-body-1">（気象データから自動抽出）</p>
+        <!-- ==========================================
+             TAB 3: 授業予定 (Schedule)
+             ========================================== -->
+        <section id="tab-schedule" class="tab-panel no-print">
+            <div class="portal-container">
+                <div class="panel-header">
+                    <div class="panel-header-badge">単元スケジュール</div>
+                    <h2 class="panel-title">授業予定 ＆ ミニレッスン</h2>
+                    <p class="panel-desc">全体の流れと見通しを持ちながら、計画的に探究学習を進めましょう。</p>
+                </div>
+
+                <div class="schedule-timeline">
+                    <!-- 1 -->
+                    <div class="schedule-row">
+                        <div class="schedule-date-badge">2026/09/14</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-intro">導入</span>
+                                <h4>ルーブリック提示・ガイダンス / 特別な日を決める</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">ミニレッスン</span>
+                                <span>気象要素について</span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- 2日目 (特別な1日) -->
-                    <div class="chart-item special-day-border display-mode-image">
-                        <div class="chart-date-header">
-                            <span class="date-month-fill" id="chart-month-2">　</span>月<span class="date-day-fill" id="chart-day-2">　</span>日
-                        </div>
-                        <div class="chart-image-container">
-                            <img id="weather-map-2" src="output/default_chart2.png" alt="天気図2日目">
-                            <canvas id="crop-canvas-2" style="display:none;"></canvas>
-                        </div>
-                        <div class="chart-description">
-                            <strong id="desc-title-2">2日目</strong>
-                            <p id="desc-body-2">（特別な1日）</p>
+                    <!-- 2 -->
+                    <div class="schedule-row">
+                        <div class="schedule-date-badge">2026/09/16</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-lecture">特別講義</span>
+                                <h4>気象予報士からの特別講義</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">講義</span>
+                                <span>プロの気象予報士から気象の見方・番組づくりのコツを学ぶ</span>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- 3日目 -->
-                    <div class="chart-item display-mode-image">
-                        <div class="chart-date-header">
-                            <span class="date-month-fill" id="chart-month-3">　</span>月<span class="date-day-fill" id="chart-day-3">　</span>日
+                    <!-- 3 -->
+                    <div class="schedule-row">
+                        <div class="schedule-date-badge">2026/09/17</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-work">データ収集</span>
+                                <h4>特別な日を決めてHPでグラフと天気図のプリントをつくる / 「時間と空間」のつながりを考察する</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">ミニレッスン</span>
+                                <span>グラフの見方（気温・湿度・気圧の関係）</span>
+                            </div>
                         </div>
-                        <div class="chart-image-container">
-                            <img id="weather-map-3" src="output/default_chart3.png" alt="天気図3日目">
-                            <canvas id="crop-canvas-3" style="display:none;"></canvas>
+                    </div>
+
+                    <!-- 4 -->
+                    <div class="schedule-row">
+                        <div class="schedule-date-badge">2026/09/25</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-explore">探究</span>
+                                <h4>観天望気を事象のつながりを整理して科学的に考察</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">ミニレッスン</span>
+                                <span>観天望気とは（先人の知恵と科学の架け橋）</span>
+                            </div>
                         </div>
-                        <div class="chart-description">
-                            <strong id="desc-title-3">3日目</strong>
-                            <p id="desc-body-3">（翌日）</p>
+                    </div>
+
+                    <!-- 5 -->
+                    <div class="schedule-row">
+                        <div class="schedule-date-badge">2026/09/28</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-explore">探究</span>
+                                <h4>特別な日の気温・湿度・気圧のグラフと天気図から「時間と空間」のつながりを考察</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">ミニレッスン</span>
+                                <span>天気図の見方・活用サイトの紹介</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6 -->
+                    <div class="schedule-row">
+                        <div class="schedule-date-badge">2026/09/30</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-explore">探究</span>
+                                <h4>観天望気を事象のつながりを整理して科学的に考察（思考ツール活用）</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">探究作業</span>
+                                <span>ステップチャート・クラゲチャートで深める</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 7 -->
+                    <div class="schedule-row">
+                        <div class="schedule-date-badge">2026/10/02</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-explore">探究</span>
+                                <h4>観天望気を事象のつながりを整理して科学的に考察（まとめと共有）</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">探究作業</span>
+                                <span>科学的根拠の整理と参考文献の記録</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BH 1 -->
+                    <div class="schedule-row schedule-bh">
+                        <div class="schedule-date-badge">BH（9/28の週）</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-bh">ブロックアワー</span>
+                                <h4>スライドづくり（構成案・原稿の下書き）</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">個別探究</span>
+                                <span>構成シートと台本の作成</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 8 -->
+                    <div class="schedule-row">
+                        <div class="schedule-date-badge">2026/10/13</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-creation">制作</span>
+                                <h4>スライドづくり（天気の空間的・時間的解説の作成）</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">ミニレッスン</span>
+                                <span>四季による天気図の特徴</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BH 2 -->
+                    <div class="schedule-row schedule-bh">
+                        <div class="schedule-date-badge">BH（10/12の週）</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-bh">ブロックアワー</span>
+                                <h4>スライドづくり（スライド完成・発表リハーサル）</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">個別探究</span>
+                                <span>スライド完成と発表練習</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 9 -->
+                    <div class="schedule-row">
+                        <div class="schedule-date-badge">2026/10/19</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-creation">動画制作</span>
+                                <h4>天気予報動画の作成（撮影開始）</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">ミニレッスン</span>
+                                <span>動画の撮り方（見やすい画面・聞き取りやすい話し方）</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 10 -->
+                    <div class="schedule-row">
+                        <div class="schedule-date-badge">2026/10/21</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-creation">動画制作</span>
+                                <h4>天気予報動画の作成（撮影・編集）</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">制作作業</span>
+                                <span>動画のブラッシュアップ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 11 -->
+                    <div class="schedule-row">
+                        <div class="schedule-date-badge">2026/10/23</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-creation">動画制作</span>
+                                <h4>天気予報動画の作成（動画完成・最終提出）</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">制作作業</span>
+                                <span>提出用フォルダへアップロード</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 12 -->
+                    <div class="schedule-row schedule-goal">
+                        <div class="schedule-date-badge">2026/10/27</div>
+                        <div class="schedule-content">
+                            <div class="schedule-main">
+                                <span class="schedule-phase phase-showcase">最終発表</span>
+                                <h4>鑑賞会（お互いの番組を見合って相互評価・振り返り）</h4>
+                            </div>
+                            <div class="schedule-lesson">
+                                <span class="lesson-tag">発表・省察</span>
+                                <span>ルーブリックを用いた振り返り</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <section class="section-weather-graph">
-                <h2 class="section-title">6．気象要素をグラフで整理すると… <span class="location-badge" id="print-location">（観測地点：未読込）</span></h2>
-                <p class="graph-subtitle">
-                    <span class="legend-temp">気温：赤</span>　
-                    <span class="legend-hum">湿度：青</span>　
-                    <span class="legend-press">気圧：緑</span>
-                </p>
+        <!-- ==========================================
+             TAB 4: 利用サイト一覧 (Links)
+             ========================================== -->
+        <section id="tab-links" class="tab-panel no-print">
+            <div class="portal-container">
+                <div class="panel-header">
+                    <div class="panel-header-badge">リソース集</div>
+                    <h2 class="panel-title">探究に利用できるサイト一覧</h2>
+                    <p class="panel-desc">過去のデータ検索、風や雲の可視化、わかりやすい理科解説など、目的に応じて使い分けましょう！</p>
+                </div>
 
-                <div class="graphs-container">
-                    <!-- 上グラフ（1日目＆2日目） -->
-                    <div class="graph-block upper-block">
-                        <div class="graph-svg-wrapper" id="svg-container-upper">
-                            <!-- SVGグラフがここに挿入されます -->
+                <div class="sites-grid">
+                    <!-- 1. 気象学習支援サイト -->
+                    <div class="site-card site-card-featured">
+                        <div class="site-card-top">
+                            <span class="site-tag tag-primary">授業ツール（当サイト）</span>
+                            <div class="site-icon">🖨️</div>
+                        </div>
+                        <h3 class="site-name">気象学習支援サイト（プリント作成ツール）</h3>
+                        <p class="site-role">授業で使うワークシートプリントをつくる</p>
+                        <p class="site-desc">気象庁の過去データ（CSV）や天気図カレンダーを取り込み、特別な日とその前後の「天気図3日分」と「気温・湿度・気圧の複合グラフ」をA4プリントとして自動生成・PDF保存できます。</p>
+                        <div class="site-action">
+                            <button onclick="switchTab('tab-generator')" class="btn btn-primary btn-block">
+                                ツール画面を開く ➔
+                            </button>
                         </div>
                     </div>
 
-                    <!-- 下グラフ（3日目＆空き枠） -->
-                    <div class="graph-block lower-block">
-                        <div class="graph-svg-wrapper" id="svg-container-lower">
-                            <!-- SVGグラフがここに挿入されます -->
+                    <!-- 2. earth -->
+                    <div class="site-card">
+                        <div class="site-card-top">
+                            <span class="site-tag tag-visual">風・雲の動き</span>
+                            <div class="site-icon">🌍</div>
+                        </div>
+                        <h3 class="site-name">earth (Nullschool)</h3>
+                        <p class="site-role">その日の風の流れや雲の場所がわかる</p>
+                        <p class="site-desc">地球規模のリアルタイム・過去の気流や海洋の動き、台風の渦などをインタラクティブな美しい3D地球儀アニメーションで観察できます。</p>
+                        <div class="site-action">
+                            <a href="https://earth.nullschool.net/jp/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-block">
+                                earth を開く ↗
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 3. tenki.jp -->
+                    <div class="site-card">
+                        <div class="site-card-top">
+                            <span class="site-tag tag-data">過去天気・衛星</span>
+                            <div class="site-icon">🛰️</div>
+                        </div>
+                        <h3 class="site-name">tenki.jp（過去の天気）</h3>
+                        <p class="site-role">過去の日の1日の気象衛星や天気図の動きが見れる</p>
+                        <p class="site-desc">日本気象協会公式。日付を指定して、過去の気象衛星ひまわりの雲画像アニメーションや実況天気図の推移、全国のアメダス実況を確認できます。</p>
+                        <div class="site-action">
+                            <a href="https://tenki.jp/past/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-block">
+                                tenki.jp 過去天気を開く ↗
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 4. Windy -->
+                    <div class="site-card">
+                        <div class="site-card-top">
+                            <span class="site-tag tag-visual">気象シミュレーション</span>
+                            <div class="site-icon">💨</div>
+                        </div>
+                        <h3 class="site-name">Windy</h3>
+                        <p class="site-role">その日の風の流れや雲の場所がわかる</p>
+                        <p class="site-desc">世界最高峰の気象モデルによる風向・風速・雨雲・気圧配置の可視化。等圧線やレーダー、雲の高度別分布などを視覚的に詳しく調べられます。</p>
+                        <div class="site-action">
+                            <a href="https://www.windy.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-block">
+                                Windy を開く ↗
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 5. 気象庁 -->
+                    <div class="site-card">
+                        <div class="site-card-top">
+                            <span class="site-tag tag-official">公式データベース</span>
+                            <div class="site-icon">🏛️</div>
+                        </div>
+                        <h3 class="site-name">気象庁（過去の気象データ・天気図）</h3>
+                        <p class="site-role">過去の日のある地点の天気図や気象データを検索できる</p>
+                        <p class="site-desc">日本全国の過去の気象観測データ（気温、湿度、気圧、降水量など）のダウンロードや、気象庁発行「日々の天気図」PDFを公式に入手できます。</p>
+                        <div class="site-action-group">
+                            <a href="https://www.data.jma.go.jp/risk/obsdl/index.php" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
+                                📊 過去気象データ(CSV)
+                            </a>
+                            <a href="https://www.data.jma.go.jp/yoho/hibiten/index.html" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
+                                🗺️ 日々の天気図(PDF)
+                            </a>
+                            <a href="https://www.jma.go.jp/" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-secondary">
+                                公式トップ
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 6. さわにいの理科サイト -->
+                    <div class="site-card">
+                        <div class="site-card-top">
+                            <span class="site-tag tag-study">学習支援・YouTube</span>
+                            <div class="site-icon">👨‍🏫</div>
+                        </div>
+                        <h3 class="site-name">さわにいの理科サイト</h3>
+                        <p class="site-role">YouTuberの学習支援サイト</p>
+                        <p class="site-desc">元理科教員「さわにい」氏による日本最大級の中学理科学習サイト。中2地学「気象」の前線、気圧配置、雲のでき方、湿度計算などが図解で分かりやすくまとまっています。</p>
+                        <div class="site-action-group">
+                            <a href="https://sawanii.ne.jp/" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">
+                                🌐 サイトを見る
+                            </a>
+                            <a href="https://www.youtube.com/@sawanii" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-youtube">
+                                ▶️ YouTubeチャンネル
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 7. あすなろ学習室 -->
+                    <div class="site-card">
+                        <div class="site-card-top">
+                            <span class="site-tag tag-study">教育センター教材</span>
+                            <div class="site-icon">📖</div>
+                        </div>
+                        <h3 class="site-name">あすなろ学習室</h3>
+                        <p class="site-role">HPでの学習サイト</p>
+                        <p class="site-desc">静岡県総合教育センターが提供する無料学習サイト。中学校理科の各単元で、アニメーションや図解を用いながら天気の変化の基本原理を段階的に復習できます。</p>
+                        <div class="site-action">
+                            <a href="https://www.shizuoka-c.ed.jp/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-block">
+                                あすなろ学習室を開く ↗
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 8. 理科の授業をふりかえる -->
+                    <div class="site-card">
+                        <div class="site-card-top">
+                            <span class="site-tag tag-study">学習支援・YouTube</span>
+                            <div class="site-icon">🎬</div>
+                        </div>
+                        <h3 class="site-name">理科の授業をふりかえる</h3>
+                        <p class="site-role">YouTuberの学習支援サイト・復習動画</p>
+                        <p class="site-desc">中学校理科の授業内容を分かりやすくふりかえる学習動画チャンネル。気象要素の測定、雲の発生実験、前線の通過による天気の変化などを動画で復習できます。</p>
+                        <div class="site-action">
+                            <a href="https://www.youtube.com/results?search_query=%E7%90%86%E7%A7%91%E3%81%AE%E6%8E%88%E6%A5%AD%E3%82%92%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8B+%E6%B0%97%E8%B1%A1" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-block">
+                                YouTubeで動画を検索 ↗
+                            </a>
                         </div>
                     </div>
                 </div>
-            </section>
-        </article>
-    </main>
+            </div>
+        </section>
 
+        <!-- ==========================================
+             TAB 5: 授業動画・参考資料 (Drive Links)
+             ========================================== -->
+        <section id="tab-drive" class="tab-panel no-print">
+            <div class="portal-container">
+                <div class="panel-header">
+                    <div class="panel-header-badge">Google Drive 共有</div>
+                    <h2 class="panel-title">授業動画 ＆ 参考資料フォルダ</h2>
+                    <p class="panel-desc">ミニレッスン動画の復習や、先輩たちが制作した素晴らしい過去作品をいつでも閲覧できます。</p>
+                </div>
 
+                <div class="drive-links-container">
+                    <!-- 授業動画 -->
+                    <div class="drive-card video-card">
+                        <div class="drive-card-header">
+                            <div class="drive-icon">🎥</div>
+                            <div>
+                                <span class="drive-category">授業アーカイブ・解説</span>
+                                <h3>授業動画フォルダ</h3>
+                            </div>
+                        </div>
+                        <p class="drive-desc">
+                            授業で行われたミニレッスンのアーカイブや、グラフの読み取り方、天気図の切り出し方、動画撮影のポイントなどの解説動画がまとまっています。休んだ日のキャッチアップや復習に活用してください。
+                        </p>
+                        <div class="drive-badge-list">
+                            <span class="badge-item">気象要素の見方</span>
+                            <span class="badge-item">グラフと天気図の考察</span>
+                            <span class="badge-item">観天望気の科学</span>
+                            <span class="badge-item">動画の撮り方</span>
+                        </div>
+                        <a href="https://drive.google.com/drive/folders/1jyatzgB6JkxwR0Z9dQuqXE9kdFIy8q7K" target="_blank" rel="noopener noreferrer" class="btn btn-drive btn-drive-video">
+                            <span>Google Driveで授業動画を開く</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/><path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/></svg>
+                        </a>
+                    </div>
 
-    <script src="app.js?v=20260916-5"></script>
+                    <!-- 参考資料 -->
+                    <div class="drive-card doc-card">
+                        <div class="drive-card-header">
+                            <div class="drive-icon">📚</div>
+                            <div>
+                                <span class="drive-category">講義資料・過去作品</span>
+                                <h3>参考資料フォルダ</h3>
+                            </div>
+                        </div>
+                        <p class="drive-desc">
+                            気象予報士の講義スライド、過去の生徒が制作したお天気番組冊子・動画（先輩たちの優れた作品見本）などの実践資料が格納されています。構成や見せ方の参考に大いに活用しましょう。
+                        </p>
+                        <div class="drive-badge-list">
+                            <span class="badge-item">気象予報士スライド</span>
+                            <span class="badge-item">先輩たちの冊子作品</span>
+                            <span class="badge-item">番組台本の見本</span>
+                            <span class="badge-item">ワークシート原本</span>
+                        </div>
+                        <a href="https://drive.google.com/drive/folders/19cjopV36FKv1xYZJEVPs593MDkREa0Sa?usp=drive_link" target="_blank" rel="noopener noreferrer" class="btn btn-drive btn-drive-doc">
+                            <span>Google Driveで参考資料を開く</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/><path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="notice-box">
+                    <span class="notice-icon">ℹ️</span>
+                    <div>
+                        <strong>Google Driveへのアクセスについて：</strong><br>
+                        学校のアカウント（Google Workspace）でログインした状態でリンクを開いてください。うまく開かない場合は、ブラウザのログインアカウントをご確認ください。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 6: 観天望気・思考ツール (Tips & Lore)
+             ========================================== -->
+        <section id="tab-lore" class="tab-panel no-print">
+            <div class="portal-container">
+                <div class="panel-header">
+                    <div class="panel-header-badge">探究のヒント</div>
+                    <h2 class="panel-title">観天望気一覧 ＆ 思考ツール</h2>
+                    <p class="panel-desc">番組の「今日の観天望気」コーナーで取り上げるテーマの選定や、科学的根拠を考察する際に役立てましょう。</p>
+                </div>
+
+                <!-- 観天望気とは -->
+                <div class="lore-about-card">
+                    <h3>💡 観天望気（かんてんぼうき）って…？</h3>
+                    <p>
+                        天気の変わり目を予測するため、空の状況を観察すること。<br>
+                        雲や風、暈（かさ）、虹、視程などの光象が主な観察対象である。昔はこの方法によって天気を予測していた。今では科学的な技術が進み、重要性は薄れたが、短時間の気象予測には今でも非常に有効なことがある。（改訂新版 世界大百科事典より）
+                    </p>
+                </div>
+
+                <!-- 観天望気一覧リスト -->
+                <div class="lore-grid">
+                    <!-- 太陽・月 -->
+                    <div class="lore-card">
+                        <div class="lore-card-header">
+                            <span class="lore-icon">☀️🌙</span>
+                            <h4>太陽や月に関する観天望気</h4>
+                        </div>
+                        <ul class="lore-list">
+                            <li>夕焼けの次の日は晴れ</li>
+                            <li>太陽や月に輪（暈：かさ）がかかると雨か曇り</li>
+                            <li>星がまたたくと風強し</li>
+                        </ul>
+                    </div>
+
+                    <!-- 雲 -->
+                    <div class="lore-card">
+                        <div class="lore-card-header">
+                            <span class="lore-icon">☁️</span>
+                            <h4>雲に関する観天望気</h4>
+                        </div>
+                        <ul class="lore-list">
+                            <li>うろこ雲（巻積雲）は天気変化のきざし</li>
+                            <li>おぼろ雲（高層雲）は雨の前ぶれ</li>
+                            <li>夏の朝曇りは晴れ</li>
+                            <li>山に笠雲がかかると雨</li>
+                            <li>上り雲（北に向かう雲）は雨、下り雲（南に向かう雲）は晴れ</li>
+                            <li>飛行機雲が消えると晴れ、飛行機雲が残ると雨</li>
+                            <li>レンズ雲は雨のきざし</li>
+                            <li>頭巾雲が入道雲にできると大雨</li>
+                            <li>かなとこ雲が立つと暴風</li>
+                            <li>暗い雲の底に乳房雲が広がると大雨</li>
+                            <li>黒い雲が広がると雷雨</li>
+                        </ul>
+                    </div>
+
+                    <!-- 生物 -->
+                    <div class="lore-card">
+                        <div class="lore-card-header">
+                            <span class="lore-icon">🐸🐦</span>
+                            <h4>生物に関する観天望気</h4>
+                        </div>
+                        <p class="lore-note">※下線（<span class="caution-lore">波線</span>）は『もっとすごすぎる天気の図鑑』で科学的信頼度が低いとされているもの</p>
+                        <ul class="lore-list">
+                            <li>ツバメが低く飛ぶと雨</li>
+                            <li>アマガエルが鳴くと雨</li>
+                            <li>クモが糸を張ると明日は天気が良い</li>
+                            <li>蜘蛛の巣に朝露が付いていると晴れ</li>
+                            <li>トンビが高く飛ぶと晴れ、低く飛ぶと雨</li>
+                            <li>スズメが早朝からさえずると晴れ</li>
+                            <li class="caution-lore">ハチが低く飛ぶと雷雨</li>
+                            <li class="caution-lore">ネコが顔を洗うと雨</li>
+                            <li class="caution-lore">ミミズが地上に這い出したら大雨</li>
+                            <li class="caution-lore">ヤマバトが鳴くと雨になる</li>
+                            <li class="caution-lore">アリの行列を見たら雨</li>
+                            <li class="caution-lore">カマキリが高いところに卵を産むとその冬は大雪</li>
+                            <li class="caution-lore">ハチが低いところに巣をつくると台風が多い</li>
+                        </ul>
+                    </div>
+
+                    <!-- その他 -->
+                    <div class="lore-card">
+                        <div class="lore-card-header">
+                            <span class="lore-icon">🌈🔔</span>
+                            <h4>その他の観天望気</h4>
+                        </div>
+                        <ul class="lore-list">
+                            <li>朝虹は雨、夕虹は晴れ</li>
+                            <li>朝焼けは雨、夕焼けは晴れ</li>
+                            <li>煙が東にたなびけば晴れ、西にたなびくと雨</li>
+                            <li>鐘の音が遠くまで響けば雨・嵐</li>
+                            <li>遠くの音がよく聞こえる時は雨が降る</li>
+                            <li>朝霜が降りないと雨 / 朝霜が降りれば晴れ</li>
+                            <li>雷の音が聞こえたら雷雨 / 急に冷たい風が吹くと雷雨 / 雷三日</li>
+                            <li>茶碗のご飯粒がきれいに取れると雨</li>
+                            <li>クシが通りにくいと雨</li>
+                            <li>リウマチが痛むと雨</li>
+                            <li>北風が吹く朝は晴れになる</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 思考ツール & 参考文献 -->
+                <div class="tools-and-books-grid">
+                    <!-- 思考ツール -->
+                    <div class="portal-card">
+                        <h3 class="card-title">🧩 使える思考ツール</h3>
+                        <p class="card-intro">科学的に事象のつながりを2段階以上で説明するために、以下の思考の枠組みを活用しましょう。</p>
+                        <div class="tool-items">
+                            <div class="tool-box">
+                                <strong>1. ステップチャート</strong>
+                                <p>「原因 ➔ 中間事象 ➔ 観天望気」の順序立てて原因と結果を矢印でつなぐ（例：雨の前は空気が湿る ➔ 虫の羽が重くなり低く飛ぶ ➔ それを食べるツバメも低く飛ぶ）</p>
+                            </div>
+                            <div class="tool-box">
+                                <strong>2. クラゲチャート</strong>
+                                <p>頭に「主張・結論」を置き、足の部分に「複数の根拠やデータ（天気図、グラフ、観天望気）」をぶら下げて整理する</p>
+                            </div>
+                            <div class="tool-box">
+                                <strong>3. つながりの輪</strong>
+                                <p>複数の気象要素（気温、気圧、湿度、風向）を円形に配置し、それぞれの相互影響を線と矢印で結んで総合的に考察する</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- おすすめ参考図書 -->
+                    <div class="portal-card">
+                        <h3 class="card-title">📖 必ず1冊は利用してほしい推薦図書</h3>
+                        <p class="card-intro">学校図書館や理科室にある図書資料です。参考文献としてしっかり記録しましょう。</p>
+                        <ul class="books-list">
+                            <li>
+                                <strong>荒木健太郎『もっとすごすぎる天気の図鑑』</strong>
+                                <span>KADOKAWA，2022年</span>
+                            </li>
+                            <li>
+                                <strong>荒木健太郎『雲を愛する技術』</strong>
+                                <span>光文社，2020年</span>
+                            </li>
+                            <li>
+                                <strong>武田康男・菊池真以『雲と天気大事典』</strong>
+                                <span>あかね書房，2017年</span>
+                            </li>
+                            <li>
+                                <strong>岩谷忠幸『史上最強カラー図解 プロが教える気象・天気図のすべてがわかる本』</strong>
+                                <span>ナツメ社，2011年</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 7: プリント作成ツール (Worksheet Generator)
+             従来のダッシュボード ＋ A4プレビュー
+             ========================================== -->
+        <section id="tab-generator" class="tab-panel generator-wrapper">
+            
+            <!-- 管理用ダッシュボード（画面表示時のみ左側に表示） -->
+            <aside class="dashboard no-print">
+                <header class="dashboard-header">
+                    <div class="dashboard-tag">ワークシート自動作成</div>
+                    <h1>気象学習コントロール</h1>
+                    <p class="subtitle">データの入力と資料の自動生成</p>
+                </header>
+
+                <section class="control-group">
+                    <h2>1. 気象データ入力 (CSV)</h2>
+                    <div class="file-input-wrapper">
+                        <button class="btn btn-primary btn-file">CSVファイルを選択
+                            <input type="file" id="csv-file" accept=".csv">
+                        </button>
+                        <span id="csv-filename" class="file-name">選択されていません (default_data使用中)</span>
+                    </div>
+                    <p class="help-text">気象庁からダウンロードした1時間ごとのCSVデータを読み込めます。</p>
+                    <p class="link-text"><a href="https://www.data.jma.go.jp/risk/obsdl/index.php" target="_blank" rel="noopener noreferrer">「気象データ」ここから</a></p>
+                    <div class="link-text obs-instructions mt-2 pt-2 border-top" style="border-top: 1px dashed #cbd5e1;">
+                        <span style="font-weight: 700; color: #475569; display: block; margin-bottom: 4px; font-size: 0.78rem;">📊 ダウンロード手順：</span>
+                        <ul style="padding-left: 16px; margin: 0; color: #64748b; font-size: 0.75rem; line-height: 1.45;">
+                            <li style="margin-bottom: 2px;"><strong>地点</strong>：地図上の <span style="color: #ef4444; font-weight: bold;">赤い◎</span> を選ぶ</li>
+                            <li style="margin-bottom: 2px;"><strong>項目</strong>：「時別値」の「気温、風向・風速、現地気圧、天気、相対湿度」を選ぶ</li>
+                            <li><strong>期間</strong>：「連続した期間で表示する」を選び、当日とその前後1日の3日間を選ぶ</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section class="control-group">
+                    <h2>2. 天気図カレンダーのアップロード</h2>
+                    <div class="calendar-inputs">
+                        <div class="file-input-wrapper mb-2">
+                            <button class="btn btn-secondary btn-file btn-sm">カレンダー天気図 (PDF or 画像) 1
+                                <input type="file" id="cal-file-1" accept="application/pdf, image/jpeg, image/png">
+                            </button>
+                            <span id="cal-file-1-name" class="file-name">選択されていません</span>
+                        </div>
+                        <div class="file-input-wrapper">
+                            <button class="btn btn-secondary btn-file btn-sm">カレンダー天気図 (PDF or 画像) 2 (月またぎ用)
+                                <input type="file" id="cal-file-2" accept="application/pdf, image/jpeg, image/png">
+                            </button>
+                            <span id="cal-file-2-name" class="file-name">選択されていません</span>
+                        </div>
+                    </div>
+                    <p class="help-text">気象庁の「日々の天気図」PDF（1ヶ月分）をアップロードします。月をまたぐ日程がある場合はPDF 2も使用してください。</p>
+                    <p class="link-text"><a href="https://www.data.jma.go.jp/yoho/hibiten/index.html" target="_blank" rel="noopener noreferrer">「天気図データ」ここから</a></p>
+
+                    <details style="margin-top: 10px; margin-bottom: 5px;">
+                        <summary style="cursor: pointer; font-size: 0.9em; font-weight: bold;">⚙️ 天気図がズレる場合の微調整</summary>
+                        <div style="padding: 10px; background: rgba(0,0,0,0.1); border: 1px solid rgba(128,128,128,0.3); border-radius: 4px; margin-top: 5px;">
+                            <div style="font-size: 0.75em; color: #f59e0b; margin-bottom: 10px; line-height: 1.4;">
+                                ※気象庁のPDFは発行月によって余白が微妙に異なるため、ズレる場合があります。<br>
+                                右側のプレビュー画面を見ながら、枠にピッタリ収まるように数値を調整してください。
+                            </div>
+                            
+                            <div style="margin-bottom: 12px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8em; margin-bottom: 2px;">
+                                    <span>⬅️ 枠の中の天気図を【左右】に動かす ➡️</span>
+                                    <span id="val-x" style="font-weight: bold;">4.7</span>
+                                </div>
+                                <input type="range" id="adj-x" min="0" max="15" step="0.1" value="4.7" oninput="updateCropSettings()" style="width: 100%;">
+                            </div>
+                            
+                            <div style="margin-bottom: 12px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8em; margin-bottom: 2px;">
+                                    <span>⬆️ 枠の中の天気図を【上下】に動かす ⬇️</span>
+                                    <span id="val-y" style="font-weight: bold;">1.8</span>
+                                </div>
+                                <input type="range" id="adj-y" min="0" max="15" step="0.1" value="1.8" oninput="updateCropSettings()" style="width: 100%;">
+                            </div>
+                            
+                            <div style="margin-bottom: 12px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8em; margin-bottom: 2px;">
+                                    <span>↔️ 天気図の【横幅】を調整（右に行くほどズレる場合）</span>
+                                    <span id="val-w" style="font-weight: bold;">94.9</span>
+                                </div>
+                                <input type="range" id="adj-w" min="80" max="100" step="0.1" value="94.9" oninput="updateCropSettings()" style="width: 100%;">
+                            </div>
+                            
+                            <div style="margin-bottom: 5px;">
+                                <div style="display: flex; justify-content: space-between; font-size: 0.8em; margin-bottom: 2px;">
+                                    <span>↕️ 天気図の【縦幅】を調整（下段がズレる場合）</span>
+                                    <span id="val-h" style="font-weight: bold;">94.2</span>
+                                </div>
+                                <input type="range" id="adj-h" min="80" max="100" step="0.1" value="94.2" oninput="updateCropSettings()" style="width: 100%;">
+                            </div>
+                        </div>
+                    </details>
+                </section>
+
+                <section class="control-group">
+                    <h2>3. PDFとして保存</h2>
+                    <p class="help-text" style="margin-bottom: 8px;">プリントに印刷されるグループと名前を入力してから、PDFとして保存します。</p>
+                    <div class="control-row-inline" style="margin-bottom: 10px;">
+                        <input type="text" id="student-group" placeholder="グループ" style="width: 100px;">
+                        <input type="text" id="student-name" placeholder="名前" style="flex-grow: 1;">
+                    </div>
+                    <button class="btn btn-success btn-block" onclick="window.print()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: middle;">
+                            <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm7 1v4a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/>
+                        </svg>PDFとして保存・印刷
+                    </button>
+                </section>
+
+                <section class="control-group">
+                    <h2>4. 先生へ提出（アップロード）</h2>
+                    <p class="help-text" style="margin-bottom: 8px;">上で保存したPDFを選んで提出します。</p>
+                    <div class="file-input-wrapper">
+                        <button class="btn btn-secondary btn-file btn-sm">保存したPDFを選ぶ
+                            <input type="file" id="submit-pdf-file" accept="application/pdf, image/jpeg, image/png" onchange="document.getElementById('submit-pdf-name').innerText = this.files.length > 0 ? this.files[0].name : '選択されていません'">
+                        </button>
+                        <span id="submit-pdf-name" class="file-name">選択されていません</span>
+                    </div>
+                    <button class="btn btn-success btn-block" id="submit-btn" onclick="uploadPdfToDrive()" style="margin-top: 10px; background-color: #0ea5e9;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 8px; vertical-align: middle;">
+                            <path fill-rule="evenodd" d="M8 0a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 1 1 .708-.708L7.5 12.293V.5A.5.5 0 0 1 8 0z"/>
+                            <path d="M1 14.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5z"/>
+                        </svg>ドライブへ提出する
+                    </button>
+                </section>
+            </aside>
+
+            <!-- 印刷用・プレビュー用A4用紙（実物） -->
+            <main class="page-container">
+                <article class="a4-sheet" id="a4-sheet-preview">
+                    <!-- 提出用名前欄（プレビュー画面のみ、印刷時は表示） -->
+                    <div class="student-info-print">
+                        <span id="print-group">グループ：＿＿＿＿</span>
+                        <span id="print-name">名前：＿＿＿＿＿＿＿＿</span>
+                    </div>
+
+                    <section class="section-weather-charts">
+                        <h2 class="section-title">5．『私にとって、忘れられない特別な1日』の前後の天気図は…</h2>
+                        
+                        <div class="weather-charts-grid">
+                            <!-- 1日目 -->
+                            <div class="chart-item display-mode-image">
+                                <div class="chart-date-header">
+                                    <span class="date-month-fill" id="chart-month-1">　</span>月<span class="date-day-fill" id="chart-day-1">　</span>日
+                                </div>
+                                <div class="chart-image-container">
+                                    <img id="weather-map-1" src="output/default_chart1.png" alt="天気図1日目">
+                                    <canvas id="crop-canvas-1" style="display:none;"></canvas>
+                                </div>
+                                <div class="chart-description">
+                                    <strong id="desc-title-1">1日目</strong>
+                                    <p id="desc-body-1">（気象データから自動抽出）</p>
+                                </div>
+                            </div>
+
+                            <!-- 2日目 (特別な1日) -->
+                            <div class="chart-item special-day-border display-mode-image">
+                                <div class="chart-date-header">
+                                    <span class="date-month-fill" id="chart-month-2">　</span>月<span class="date-day-fill" id="chart-day-2">　</span>日
+                                </div>
+                                <div class="chart-image-container">
+                                    <img id="weather-map-2" src="output/default_chart2.png" alt="天気図2日目">
+                                    <canvas id="crop-canvas-2" style="display:none;"></canvas>
+                                </div>
+                                <div class="chart-description">
+                                    <strong id="desc-title-2">2日目</strong>
+                                    <p id="desc-body-2">（特別な1日）</p>
+                                </div>
+                            </div>
+
+                            <!-- 3日目 -->
+                            <div class="chart-item display-mode-image">
+                                <div class="chart-date-header">
+                                    <span class="date-month-fill" id="chart-month-3">　</span>月<span class="date-day-fill" id="chart-day-3">　</span>日
+                                </div>
+                                <div class="chart-image-container">
+                                    <img id="weather-map-3" src="output/default_chart3.png" alt="天気図3日目">
+                                    <canvas id="crop-canvas-3" style="display:none;"></canvas>
+                                </div>
+                                <div class="chart-description">
+                                    <strong id="desc-title-3">3日目</strong>
+                                    <p id="desc-body-3">（翌日）</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="section-weather-graph">
+                        <h2 class="section-title">6．気象要素をグラフで整理すると… <span class="location-badge" id="print-location">（観測地点：未読込）</span></h2>
+                        <p class="graph-subtitle">
+                            <span class="legend-temp">気温：赤</span>　
+                            <span class="legend-hum">湿度：青</span>　
+                            <span class="legend-press">気圧：緑</span>
+                        </p>
+
+                        <div class="graphs-container">
+                            <!-- 上グラフ（1日目＆2日目） -->
+                            <div class="graph-block upper-block">
+                                <div class="graph-svg-wrapper" id="svg-container-upper">
+                                    <!-- SVGグラフがここに挿入されます -->
+                                </div>
+                            </div>
+
+                            <!-- 下グラフ（3日目＆空き枠） -->
+                            <div class="graph-block lower-block">
+                                <div class="graph-svg-wrapper" id="svg-container-lower">
+                                    <!-- SVGグラフがここに挿入されます -->
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </article>
+            </main>
+        </section>
+
+    </div>
+
+    <script src="app.js?v=20260917-1"></script>
 </body>
 </html>
