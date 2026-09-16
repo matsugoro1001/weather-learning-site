@@ -44,13 +44,13 @@
             <div class="calendar-inputs">
                 <div class="file-input-wrapper mb-2">
                     <button class="btn btn-secondary btn-file btn-sm">カレンダー天気図PDF 1
-                        <input type="file" id="cal-file-1" accept="application/pdf">
+                        <input type="file" id="cal-file-1" accept="application/pdf, image/jpeg, image/png">
                     </button>
                     <span id="cal-file-1-name" class="file-name">選択されていません</span>
                 </div>
                 <div class="file-input-wrapper">
                     <button class="btn btn-secondary btn-file btn-sm">カレンダー天気図PDF 2 (月またぎ用)
-                        <input type="file" id="cal-file-2" accept="application/pdf">
+                        <input type="file" id="cal-file-2" accept="application/pdf, image/jpeg, image/png">
                     </button>
                     <span id="cal-file-2-name" class="file-name">選択されていません</span>
                 </div>
@@ -121,7 +121,7 @@
             </div>
             <div class="file-input-wrapper">
                 <button class="btn btn-secondary btn-file btn-sm">保存したPDFを選ぶ
-                    <input type="file" id="submit-pdf-file" accept="application/pdf" onchange="document.getElementById('submit-pdf-name').innerText = this.files.length > 0 ? this.files[0].name : '選択されていません'">
+                    <input type="file" id="submit-pdf-file" accept="application/pdf, image/jpeg, image/png" onchange="document.getElementById('submit-pdf-name').innerText = this.files.length > 0 ? this.files[0].name : '選択されていません'">
                 </button>
                 <span id="submit-pdf-name" class="file-name">選択されていません</span>
             </div>
@@ -223,6 +223,6 @@
 
 
 
-    <script src="app.js?v=20260916-2"></script>
+    <script src="app.js?v=20260916-3"></script>
 </body>
 </html>

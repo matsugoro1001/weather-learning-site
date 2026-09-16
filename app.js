@@ -42,7 +42,7 @@ const state = {
         humMax: 100
     },
     locationName: "軽井沢",
-    displayMode: "text", // "text" (天気図のみ/テキスト抽出) もしくは "image" (天気図+説明画像丸ごと)
+    displayMode: "image", // "text" (天気図のみ/テキスト抽出) もしくは "image" (天気図+説明画像丸ごと)
     extractedImages: {}, // 一括切り出しした全日程の画像 (キー: 日, 値: base64 DataURL)
     isExtracting: false
 };
@@ -510,7 +510,7 @@ async function handleCalendarPdfUpload(e, slotNum) {
         });
 
         const typedarray = new Uint8Array(arrayBuffer);
-        const pdfDoc = await pdfjsLib.getDocument({ data: typedarray, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/cmaps/', cMapPacked: true, standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/standard_fonts/' }).promise;
+        const pdfDoc = await pdfjsLib.getDocument({ data: typedarray, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/cmaps/', cMapPacked: true, standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/standard_fonts/', disableFontFace: true }).promise;
 
         // 既存のスロットがあれば更新、なければ追加
         const pdfInfo = {
