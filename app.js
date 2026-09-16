@@ -509,8 +509,45 @@ async function handleCalendarPdfUpload(e, slotNum) {
             reader.readAsArrayBuffer(file);
         });
 
-        const typedarray = new Uint8Array(arrayBuffer);
-        const pdfDoc = await pdfjsLib.getDocument({ data: typedarray, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/cmaps/', cMapPacked: true, standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/standard_fonts/', disableFontFace: true }).promise;
+        let pdfDoc = null;
+        let isImage = file.type.startsWith('image/');
+        
+        if (isImage) {
+            // 画像の場合は、ダミーの pdfDoc オブジェクトを作成する
+            const imgUrl = await new Promise((resolve) => {
+                const urlReader = new FileReader();
+                urlReader.onload = (evt) => resolve(evt.target.result);
+                urlReader.readAsDataURL(file);
+            });
+            
+            const img = new Image();
+            img.src = imgUrl;
+            await new Promise((resolve) => { img.onload = resolve; });
+            
+            // 画像から tempCanvas を作成
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(img, 0, 0);
+            
+            // キャッシュに直接登録（pageNum = 1 とみなす）
+            const cacheKey = `${slotNum}_1`;
+            state.pageCache[cacheKey] = tempCanvas;
+            
+            // ダミーの pdfDoc
+            pdfDoc = {
+                numPages: 1,
+                getPage: async () => ({
+                    getViewport: () => ({ width: img.width, height: img.height }),
+                    render: () => ({ promise: Promise.resolve() }),
+                    getTextContent: async () => ({ items: [] })
+                })
+            };
+        } else {
+            const typedarray = new Uint8Array(arrayBuffer);
+            pdfDoc = await pdfjsLib.getDocument({ data: typedarray, cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/cmaps/', cMapPacked: true, standardFontDataUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/standard_fonts/', disableFontFace: true }).promise;
+        }
 
         // 既存のスロットがあれば更新、なければ追加
         const pdfInfo = {
@@ -518,7 +555,8 @@ async function handleCalendarPdfUpload(e, slotNum) {
             name: file.name,
             year: ym ? ym.year : null,
             month: ym ? ym.month : null,
-            pdfDoc: pdfDoc
+            pdfDoc: pdfDoc,
+            isImage: isImage
         };
 
         const existingIdx = state.pdfFiles.findIndex(f => f.slot === slotNum);
@@ -604,6 +642,11 @@ async function renderSingleWeatherChart(dayIdx) {
             // 2ページ目が存在する場合は2ページ目を読み込む
             pageNum = pdfDoc.numPages >= 2 ? 2 : 1;
             cellIdx = targetDay - 16; // 16日=セル0, 31日=セル15
+        }
+        
+        // 画像アップロードの場合は1ページしかないので強制的に1にする
+        if (selectedPdf.isImage) {
+            pageNum = 1;
         }
 
         if (pageNum < 1 || pageNum > pdfDoc.numPages) {
