@@ -2006,18 +2006,18 @@ textarea:focus {
 
 .topic-res-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
 }
 
 .topic-res-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 14px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     transition: all 0.2s;
     position: relative;
 }
@@ -2029,7 +2029,6 @@ textarea:focus {
 
 .res-type-video { border-top: 3.5px solid #ef4444; }
 .res-type-sawanii { border-top: 3.5px solid #0284c7; }
-.res-type-asunaro { border-top: 3.5px solid #10b981; }
 .res-type-furikaeru { border-top: 3.5px solid #f59e0b; }
 
 .res-card-top {
@@ -2041,71 +2040,165 @@ textarea:focus {
 .res-badge {
     font-size: 0.68rem;
     font-weight: 700;
-    padding: 2px 7px;
+    padding: 2px 8px;
     border-radius: 6px;
 }
 
 .res-badge-video { background: #fee2e2; color: #b91c1c; }
 .res-badge-sawanii { background: #e0f2fe; color: #0369a1; }
-.res-badge-asunaro { background: #dcfce7; color: #15803d; }
 .res-badge-furikaeru { background: #fef3c7; color: #b45309; }
 
 .res-icon {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
 }
 
 .res-title {
-    font-size: 0.92rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--text-main);
     margin: 0;
     line-height: 1.35;
 }
 
-.res-sitename {
-    font-size: 0.74rem;
-    color: var(--text-muted);
-    margin: 0;
-}
-
 .res-desc {
     font-size: 0.78rem;
     color: var(--text-sub);
     line-height: 1.5;
-    flex-grow: 1;
     margin: 0;
 }
 
 .res-action {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-top: 6px;
-    padding-top: 8px;
+    margin-top: auto;
+    padding-top: 10px;
     border-top: 1px solid #f1f5f9;
 }
 
-.btn-res-link {
-    background: #f8fafc;
-    border: 1px solid #cbd5e1;
-    color: var(--primary);
+.btn-res-link-primary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: #0284c7;
+    color: #ffffff;
     font-weight: 600;
+    font-size: 0.8rem;
+    padding: 7px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
+}
+
+.btn-res-link-primary:hover {
+    background: #0369a1;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
+}
+
+.res-type-video .btn-res-link-primary {
+    background: #dc2626;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.2);
+}
+.res-type-video .btn-res-link-primary:hover {
+    background: #b91c1c;
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.3);
+}
+
+/* サブリンク（複数リンク一覧） */
+.res-sublinks-wrapper {
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.res-sublinks-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.res-sublinks-count {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.res-sublink-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.res-sublink-item {
+    margin: 0;
+}
+
+.res-sublink-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 6px 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    text-decoration: none;
+    transition: all 0.18s;
+}
+
+.res-sublink-btn:hover {
+    background: #f0f9ff;
+    border-color: #7dd3fc;
+    transform: translateX(2px);
+}
+
+.sublink-title {
+    font-size: 0.77rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.35;
+}
+
+.res-sublink-btn:hover .sublink-title {
+    color: #0284c7;
+}
+
+.sublink-arrow {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    flex-shrink: 0;
+    transition: transform 0.18s;
+}
+
+.res-sublink-btn:hover .sublink-arrow {
+    color: #0284c7;
+    transform: translate(2px, -2px);
+}
+
+/* リンク準備中表示 */
+.res-action-empty {
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.res-empty-badge {
+    display: inline-block;
+    font-size: 0.73rem;
+    color: #94a3b8;
+    background: #f1f5f9;
     padding: 4px 10px;
     border-radius: 6px;
-    text-decoration: none;
-    font-size: 0.78rem;
-    transition: all 0.2s;
-}
-
-.btn-res-link:hover {
-    background: var(--primary);
-    color: #ffffff;
-    border-color: var(--primary);
-}
-
-.res-note-badge {
-    font-size: 0.68rem;
-    color: #94a3b8;
+    font-weight: 600;
 }
 
 /* ==========================================================================

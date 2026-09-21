@@ -115,7 +115,7 @@ function initNavigation() {
 
 function initTabFromHash() {
     const hash = window.location.hash.replace('#', '');
-    const validTabs = ['mission', 'rubric', 'schedule', 'links', 'drive', 'mogi', 'lore', 'generator'];
+    const validTabs = ['mission', 'rubric', 'schedule', 'links', 'drive', 'mogi', 'generator'];
     if (hash && validTabs.includes(hash)) {
         switchTab(`tab-${hash}`);
     } else {
@@ -2018,43 +2018,62 @@ const learningTopicsData = [
         resources: [
             {
                 type: "video",
-                title: "授業動画（ミニレッスン）",
                 siteName: "授業アーカイブ",
                 badge: "授業動画",
-                desc: "気象要素の測り方と記録のポイント解説動画",
-                url: "https://drive.google.com/drive/folders/1jyatzgB6JkxwR0Z9dQuqXE9kdFIy8q7K",
                 icon: "🎥",
-                isPlaceholder: true
+                desc: "気象要素の測り方と記録のポイント解説動画",
+                links: [
+                    {
+                        title: "気象要素の表し方（授業動画）",
+                        url: "https://drive.google.com/file/d/1kDWMAeGy-tlRWXKdV2BJ0-wHzUmuvi3K/view?usp=drive_link"
+                    }
+                ]
             },
             {
                 type: "sawanii",
-                title: "さわにいの理科サイト",
-                siteName: "さわにい",
-                badge: "図解解説",
-                desc: "気温・湿度・気圧・天気記号の表し方をわかりやすく図解",
-                url: "https://sawanii.ne.jp/",
+                siteName: "さわにいの理科サイト",
+                badge: "さわにい",
                 icon: "👨‍🏫",
-                isPlaceholder: true
-            },
-            {
-                type: "asunaro",
-                title: "あすなろ学習室",
-                siteName: "あすなろ学習室",
-                badge: "学習教材",
-                desc: "気象観測の基礎とデータ整理のアニメーション解説",
-                url: "https://www.shizuoka-c.ed.jp/",
-                icon: "📖",
-                isPlaceholder: true
+                desc: "天気記号・等圧線・気圧の特徴をイラスト図解で学習",
+                links: [
+                    {
+                        title: "天気記号の表し方・風向風力",
+                        url: "https://sawanii.ne.jp/weather-symbol/"
+                    },
+                    {
+                        title: "等圧線の引き方とルール",
+                        url: "https://sawanii.ne.jp/isobar/"
+                    },
+                    {
+                        title: "高気圧と低気圧の特徴",
+                        url: "https://sawanii.ne.jp/high-pressure-low-pressure/"
+                    }
+                ]
             },
             {
                 type: "furikaeru",
-                title: "理科の授業をふりかえる",
                 siteName: "理科の授業をふりかえる",
-                badge: "YouTube復習",
-                desc: "乾湿計の使い方や気象要素の測定実験の振り返り動画",
-                url: "https://www.youtube.com/results?search_query=%E7%90%86%E7%A7%91%E3%81%AE%E6%8E%88%E6%A5%AD%E3%82%92%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8B+%E6%B0%97%E8%B1%A1%E8%A6%81%E7%B4%A0",
+                badge: "理科の授業をふりかえる",
                 icon: "🎬",
-                isPlaceholder: true
+                desc: "要点解説動画とわかりやすいスライドまとめ",
+                links: [
+                    {
+                        title: "天気記号と風向・風力の表し方",
+                        url: "https://hario-science.com/weather-symbol/"
+                    },
+                    {
+                        title: "高気圧と低気圧の違い",
+                        url: "https://hario-science.com/low-pressure-high-pressure/"
+                    },
+                    {
+                        title: "気圧（大気圧）とは",
+                        url: "https://hario-science.com/atmospheric-pressure/"
+                    },
+                    {
+                        title: "等圧線の読み取りと気圧",
+                        url: "https://hario-science.com/isobars/"
+                    }
+                ]
             }
         ]
     },
@@ -2067,43 +2086,37 @@ const learningTopicsData = [
         resources: [
             {
                 type: "video",
-                title: "授業動画（ミニレッスン）",
                 siteName: "授業アーカイブ",
                 badge: "授業動画",
-                desc: "気温・湿度・気圧のグラフから天気の変化を分析するコツ",
-                url: "https://drive.google.com/drive/folders/1jyatzgB6JkxwR0Z9dQuqXE9kdFIy8q7K",
                 icon: "🎥",
-                isPlaceholder: true
+                desc: "複合グラフから天気の変化を分析するコツ",
+                links: [
+                    {
+                        title: "グラフの読み取り方（授業動画）",
+                        url: "https://drive.google.com/file/d/1PCIqGczLCLe3DIqe_YUDXbV75RwPBixc/view?usp=drive_link"
+                    }
+                ]
             },
             {
                 type: "sawanii",
-                title: "さわにいの理科サイト",
-                siteName: "さわにい",
-                badge: "図解解説",
-                desc: "晴れの日・雨の日の気温と湿度のグラフ変化の徹底比較",
-                url: "https://sawanii.ne.jp/",
+                siteName: "さわにいの理科サイト",
+                badge: "さわにい",
                 icon: "👨‍🏫",
-                isPlaceholder: true
-            },
-            {
-                type: "asunaro",
-                title: "あすなろ学習室",
-                siteName: "あすなろ学習室",
-                badge: "学習教材",
-                desc: "1日の天気の変化と気象データの読み取り練習",
-                url: "https://www.shizuoka-c.ed.jp/",
-                icon: "📖",
-                isPlaceholder: true
+                desc: "気温・湿度のグラフ変化の徹底比較",
+                links: []
             },
             {
                 type: "furikaeru",
-                title: "理科の授業をふりかえる",
                 siteName: "理科の授業をふりかえる",
-                badge: "YouTube復習",
-                desc: "グラフの波形から天気を読み取るテクニック解説動画",
-                url: "https://www.youtube.com/results?search_query=%E7%90%86%E7%A7%91%E3%81%AE%E6%8E%88%E6%A5%AD%E3%82%92%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8B+%E6%B0%97%E6%B8%A9+%E6%B9%BF%E5%BA%A6+%E3%82%B0%E3%83%A9%E3%83%97",
+                badge: "理科の授業をふりかえる",
                 icon: "🎬",
-                isPlaceholder: true
+                desc: "乾湿計の使い方や気象観測データのグラフ化",
+                links: [
+                    {
+                        title: "気象の観測（乾湿計・湿度などの測定）",
+                        url: "https://hario-science.com/weather-measurement/"
+                    }
+                ]
             }
         ]
     },
@@ -2116,43 +2129,42 @@ const learningTopicsData = [
         resources: [
             {
                 type: "video",
-                title: "授業動画（ミニレッスン）",
                 siteName: "授業アーカイブ",
                 badge: "授業動画",
-                desc: "天気図の見方・前線の断面図と雨の降るエリアの解説",
-                url: "https://drive.google.com/drive/folders/1jyatzgB6JkxwR0Z9dQuqXE9kdFIy8q7K",
                 icon: "🎥",
-                isPlaceholder: true
+                desc: "前線の立体構造と温帯低気圧の解説",
+                links: [
+                    {
+                        title: "天気図の読み取り方1（授業動画）",
+                        url: "https://drive.google.com/file/d/1rSmqqLDStvA6wmB16MMo8i5eNIrmhrOW/view?usp=drive_link"
+                    }
+                ]
             },
             {
                 type: "sawanii",
-                title: "さわにいの理科サイト",
-                siteName: "さわにい",
-                badge: "図解解説",
-                desc: "寒冷前線と温暖前線の違い、温帯低気圧の天気を図解",
-                url: "https://sawanii.ne.jp/",
+                siteName: "さわにいの理科サイト",
+                badge: "さわにい",
                 icon: "👨‍🏫",
-                isPlaceholder: true
-            },
-            {
-                type: "asunaro",
-                title: "あすなろ学習室",
-                siteName: "あすなろ学習室",
-                badge: "学習教材",
-                desc: "前線の動きと天気の変化のシミュレーション",
-                url: "https://www.shizuoka-c.ed.jp/",
-                icon: "📖",
-                isPlaceholder: true
+                desc: "寒冷前線・温暖前線・閉そく前線を図解で理解",
+                links: [
+                    {
+                        title: "前線の種類と天気の変化",
+                        url: "https://sawanii.ne.jp/front/"
+                    }
+                ]
             },
             {
                 type: "furikaeru",
-                title: "理科の授業をふりかえる",
                 siteName: "理科の授業をふりかえる",
-                badge: "YouTube復習",
-                desc: "前線の立体構造と通過前後の天気の変化動画",
-                url: "https://www.youtube.com/results?search_query=%E7%90%86%E7%A7%91%E3%81%AE%E6%8E%88%E6%A5%AD%E3%82%92%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8B+%E5%89%8D%E7%B7%9A+%E5%A4%A9%E6%B0%97%E5%9B%B3",
+                badge: "理科の授業をふりかえる",
                 icon: "🎬",
-                isPlaceholder: true
+                desc: "前線通過に伴う雨や気温の変化を詳しく解説",
+                links: [
+                    {
+                        title: "前線と天気の変化",
+                        url: "https://hario-science.com/front-line/"
+                    }
+                ]
             }
         ]
     },
@@ -2165,43 +2177,37 @@ const learningTopicsData = [
         resources: [
             {
                 type: "video",
-                title: "授業動画（ミニレッスン）",
                 siteName: "授業アーカイブ",
                 badge: "授業動画",
-                desc: "日本の四季と代表的な気圧配置パターンの解説",
-                url: "https://drive.google.com/drive/folders/1jyatzgB6JkxwR0Z9dQuqXE9kdFIy8q7K",
                 icon: "🎥",
-                isPlaceholder: true
+                desc: "日本の四季と気圧配置の解説",
+                links: []
             },
             {
                 type: "sawanii",
-                title: "さわにいの理科サイト",
-                siteName: "さわにい",
-                badge: "図解解説",
-                desc: "日本の四季の気圧配置（冬型・夏型・梅雨前線など）まとめ",
-                url: "https://sawanii.ne.jp/",
+                siteName: "さわにいの理科サイト",
+                badge: "さわにい",
                 icon: "👨‍🏫",
-                isPlaceholder: true
-            },
-            {
-                type: "asunaro",
-                title: "あすなろ学習室",
-                siteName: "あすなろ学習室",
-                badge: "学習教材",
-                desc: "四季の天気図クイズと季節風の仕組み",
-                url: "https://www.shizuoka-c.ed.jp/",
-                icon: "📖",
-                isPlaceholder: true
+                desc: "シベリア気団・小笠原気団など4つの気団の特徴",
+                links: [
+                    {
+                        title: "日本のまわりの気団と季節の天気",
+                        url: "https://sawanii.ne.jp/air-mass/"
+                    }
+                ]
             },
             {
                 type: "furikaeru",
-                title: "理科の授業をふりかえる",
                 siteName: "理科の授業をふりかえる",
-                badge: "YouTube復習",
-                desc: "四季の天気の特徴と気圧配置の見分け方動画",
-                url: "https://www.youtube.com/results?search_query=%E7%90%86%E7%A7%91%E3%81%AE%E6%8E%88%E6%A5%AD%E3%82%92%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8B+%E5%9B%9B%E5%AD%A3%E3%81%AE%E5%A4%A9%E6%B0%97",
+                badge: "理科の授業をふりかえる",
                 icon: "🎬",
-                isPlaceholder: true
+                desc: "日本の四季に影響を与える4つの気団まとめ",
+                links: [
+                    {
+                        title: "日本の四季と4つの気団",
+                        url: "https://hario-science.com/four-air-groups/"
+                    }
+                ]
             }
         ]
     },
@@ -2214,43 +2220,27 @@ const learningTopicsData = [
         resources: [
             {
                 type: "video",
-                title: "授業動画（ミニレッスン）",
                 siteName: "授業アーカイブ",
                 badge: "授業動画",
-                desc: "空気の上昇と断熱膨張、雲の発生実験の解説",
-                url: "https://drive.google.com/drive/folders/1jyatzgB6JkxwR0Z9dQuqXE9kdFIy8q7K",
                 icon: "🎥",
-                isPlaceholder: true
+                desc: "空気の上昇と断熱膨張、雲の発生実験の解説",
+                links: []
             },
             {
                 type: "sawanii",
-                title: "さわにいの理科サイト",
-                siteName: "さわにい",
-                badge: "図解解説",
-                desc: "飽和水蒸気量・露点・湿度の計算と雲ができる仕組み",
-                url: "https://sawanii.ne.jp/",
+                siteName: "さわにいの理科サイト",
+                badge: "さわにい",
                 icon: "👨‍🏫",
-                isPlaceholder: true
-            },
-            {
-                type: "asunaro",
-                title: "あすなろ学習室",
-                siteName: "あすなろ学習室",
-                badge: "学習教材",
-                desc: "注射器やフラスコを使った雲の発生実験と水の循環",
-                url: "https://www.shizuoka-c.ed.jp/",
-                icon: "📖",
-                isPlaceholder: true
+                desc: "飽和水蒸気量・露点・雲ができる仕組み",
+                links: []
             },
             {
                 type: "furikaeru",
-                title: "理科の授業をふりかえる",
                 siteName: "理科の授業をふりかえる",
-                badge: "YouTube復習",
-                desc: "雲ができる理由と飽和水蒸気量の考え方解説動画",
-                url: "https://www.youtube.com/results?search_query=%E7%90%86%E7%A7%91%E3%81%AE%E6%8E%88%E6%A5%AD%E3%82%92%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8B+%E9%9B%B2%E3%81%8C%E3%81%A7%E3%81%8D%E3%82%8B%E4%BB%95%E7%B5%84%E3%81%BF",
+                badge: "理科の授業をふりかえる",
                 icon: "🎬",
-                isPlaceholder: true
+                desc: "雲ができる仕組みと水蒸気の変化",
+                links: []
             }
         ]
     }
@@ -2270,23 +2260,59 @@ function renderTopicsLearningSection() {
         const item = document.createElement('div');
         item.className = 'topic-accordion-item' + (tIdx === 0 ? ' active' : '');
 
-        const resCardsHtml = topic.resources.map(res => `
-            <div class="topic-res-card res-type-${res.type}">
-                <div class="res-card-top">
-                    <span class="res-badge res-badge-${res.type}">${escapeHtml(res.badge)}</span>
-                    <span class="res-icon">${res.icon}</span>
+        const resCardsHtml = topic.resources.map(res => {
+            let linksHtml = '';
+            if (res.links && res.links.length > 0) {
+                if (res.links.length === 1) {
+                    const singleLink = res.links[0];
+                    linksHtml = `
+                        <div class="res-action">
+                            <a href="${escapeHtml(singleLink.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-res-link-primary">
+                                <span>${escapeHtml(singleLink.title)}</span> ↗
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    const listItems = res.links.map(link => `
+                        <li class="res-sublink-item">
+                            <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="res-sublink-btn">
+                                <span class="sublink-title">${escapeHtml(link.title)}</span>
+                                <span class="sublink-arrow">↗</span>
+                            </a>
+                        </li>
+                    `).join('');
+
+                    linksHtml = `
+                        <div class="res-sublinks-wrapper">
+                            <div class="res-sublinks-header">
+                                <span class="res-sublinks-count">${res.links.length}つの個別ページ</span>
+                            </div>
+                            <ul class="res-sublink-list">
+                                ${listItems}
+                            </ul>
+                        </div>
+                    `;
+                }
+            } else {
+                linksHtml = `
+                    <div class="res-action res-action-empty">
+                        <span class="res-empty-badge">⏳ リンク準備中</span>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="topic-res-card res-type-${res.type}">
+                    <div class="res-card-top">
+                        <span class="res-badge res-badge-${res.type}">${escapeHtml(res.badge)}</span>
+                        <span class="res-icon">${res.icon}</span>
+                    </div>
+                    <h5 class="res-title">${escapeHtml(res.siteName)}</h5>
+                    <p class="res-desc">${escapeHtml(res.desc)}</p>
+                    ${linksHtml}
                 </div>
-                <h5 class="res-title">${escapeHtml(res.title)}</h5>
-                <p class="res-sitename">${escapeHtml(res.siteName)}</p>
-                <p class="res-desc">${escapeHtml(res.desc)}</p>
-                <div class="res-action">
-                    <a href="${escapeHtml(res.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-res-link">
-                        <span>開く</span> ↗
-                    </a>
-                    ${res.isPlaceholder ? '<span class="res-note-badge">※URL準備中</span>' : ''}
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
         item.innerHTML = `
             <div class="topic-header" onclick="toggleTopicAccordion(${tIdx})">
