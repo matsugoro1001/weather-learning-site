@@ -41,6 +41,9 @@
                 <button class="nav-tab" data-tab="tab-drive">
                     <span class="tab-icon">📁</span><span class="tab-label">動画・資料</span>
                 </button>
+                <button class="nav-tab" data-tab="tab-mogi">
+                    <span class="tab-icon">❓</span><span class="tab-label">茂木さんQ&A</span>
+                </button>
                 <button class="nav-tab" data-tab="tab-lore">
                     <span class="tab-icon">💡</span><span class="tab-label">観天望気</span>
                 </button>
@@ -362,13 +365,43 @@
              ========================================== -->
         <section id="tab-schedule" class="tab-panel no-print">
             <div class="portal-container">
-                <div class="panel-header">
-                    <div class="panel-header-badge">単元スケジュール</div>
-                    <h2 class="panel-title">授業予定 ＆ ミニレッスン</h2>
-                    <p class="panel-desc">全体の流れと見通しを持ちながら、計画的に探究学習を進めましょう。</p>
+                <div class="panel-header panel-header-flex">
+                    <div>
+                        <div class="panel-header-badge">単元スケジュール</div>
+                        <h2 class="panel-title">授業予定 ＆ ミニレッスン</h2>
+                        <p class="panel-desc">全体の流れと見通しを持ちながら、計画的に探究学習を進めましょう。</p>
+                    </div>
+                    <div class="schedule-header-actions">
+                        <button class="btn-schedule-lock" id="btnScheduleLock" onclick="toggleScheduleEditMode()">
+                            <span class="lock-icon" id="lockIcon">🔒</span>
+                            <span id="lockText">先生用編集</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="schedule-timeline">
+                <!-- 先生用編集操作ツールバー（編集モード時に表示） -->
+                <div class="schedule-admin-toolbar" id="scheduleAdminToolbar" style="display: none;">
+                    <div class="toolbar-status">
+                        <span class="status-indicator">🟢</span>
+                        <span><strong>先生用編集モード中</strong>（ブラウザに自動保存されます）</span>
+                    </div>
+                    <div class="toolbar-buttons">
+                        <button class="btn btn-sm btn-success" onclick="openScheduleModal()">
+                            ➕ 予定を追加
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportScheduleCode()" title="全生徒に反映するためのJSONコードをコピーします">
+                            📋 コード書き出し
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetScheduleData()">
+                            🔄 初期予定に戻す
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="exitScheduleEditMode()">
+                            ✖ 編集を終了
+                        </button>
+                    </div>
+                </div>
+
+                <div class="schedule-timeline" id="scheduleTimeline">
                     <!-- 1 -->
                     <div class="schedule-row">
                         <div class="schedule-date-badge">2026/09/14</div>
@@ -588,12 +621,46 @@
         <section id="tab-links" class="tab-panel no-print">
             <div class="portal-container">
                 <div class="panel-header">
-                    <div class="panel-header-badge">リソース集</div>
-                    <h2 class="panel-title">探究に利用できるサイト一覧</h2>
-                    <p class="panel-desc">過去のデータ検索、風や雲の可視化、わかりやすい理科解説など、目的に応じて使い分けましょう！</p>
+                    <div class="panel-header-badge">学習リソース集</div>
+                    <h2 class="panel-title">探究に利用できるサイト ＆ 項目別解説</h2>
+                    <p class="panel-desc">単元のテーマごとに整理されたおすすめ学習リソースと、データ検索・シミュレーションの総合ツール集です。</p>
                 </div>
 
-                <div class="sites-grid">
+                <!-- ==========================================
+                     単元項目別 学習リソースまとめ（さわにい・あすなろ・理科の授業をふりかえる・授業動画）
+                     ========================================== -->
+                <div class="topics-learning-section">
+                    <div class="section-title-wrapper">
+                        <div class="section-title-left">
+                            <span class="section-title-icon">📚</span>
+                            <div>
+                                <h3 class="sub-section-title">単元項目別・学習リソースまとめ</h3>
+                                <p class="sub-section-desc">授業動画やおすすめの理科解説サイトを学習項目ごとに整理しました。探究の疑問に合わせて活用しましょう！</p>
+                            </div>
+                        </div>
+                        <span class="section-title-badge">重要5テーマ</span>
+                    </div>
+
+                    <div class="topics-accordion" id="topicsContainer">
+                        <!-- JavaScriptにより動的レンダリングされます -->
+                    </div>
+                </div>
+
+                <!-- ==========================================
+                     総合ツール・外部データベース一覧
+                     ========================================== -->
+                <div class="general-tools-section">
+                    <div class="section-title-wrapper">
+                        <div class="section-title-left">
+                            <span class="section-title-icon">🌐</span>
+                            <div>
+                                <h3 class="sub-section-title">気象データ ＆ シミュレーション総合ツール</h3>
+                                <p class="sub-section-desc">過去の気象データ検索や地球規模のシミュレーション、天気図・衛星画像を入手できる便利サイトです。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sites-grid">
                     <!-- 1. 気象学習支援サイト -->
                     <div class="site-card site-card-featured">
                         <div class="site-card-top">
@@ -732,6 +799,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </section>
 
         <!-- ==========================================
@@ -806,7 +874,73 @@
         </section>
 
         <!-- ==========================================
-             TAB 6: 観天望気・思考ツール (Tips & Lore)
+             TAB 6: 茂木さんへの質問 (Mogi Q&A)
+             ========================================== -->
+        <section id="tab-mogi" class="tab-panel no-print">
+            <div class="portal-container">
+                <div class="panel-header panel-header-flex">
+                    <div>
+                        <div class="panel-header-badge">気象予報士連携企画</div>
+                        <h2 class="panel-title">気象予報士 茂木さんへの質問 ＆ Q&A</h2>
+                        <p class="panel-desc">プロの気象予報士・茂木さんへの質問や、茂木さんからの回答・アドバイスをまとめるスペースです。</p>
+                    </div>
+                    <div class="mogi-header-actions" id="mogiAdminActions">
+                        <button class="btn btn-sm btn-success" onclick="openQAModal()">
+                            ➕ 質問・返答を追加
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportQACode()" title="全生徒向けにコードへ反映するためのJSONをコピーします">
+                            📋 コード書き出し
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetQAData()">
+                            🔄 初期データに戻す
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Google Docs 共同編集カード -->
+                <div class="mogi-docs-card">
+                    <div class="mogi-docs-icon">📝</div>
+                    <div class="mogi-docs-body">
+                        <div class="mogi-docs-tag">共同編集ドキュメント</div>
+                        <h3 class="mogi-docs-heading">茂木さんへの質問・回答 共有ドキュメント</h3>
+                        <p class="mogi-docs-text">
+                            特別講義前後の疑問や、制作途中の番組づくりに関するアドバイスを直接やり取りできるGoogleドキュメントです。学校アカウントでログインして自由に質問を書き込んでみましょう！
+                        </p>
+                        <div class="mogi-docs-guide">
+                            <span>💡 <strong>質問の書き方ヒント：</strong>「自分の名前・ニックネーム」「気になっていること」「なぜそう思ったか・どんな番組にしたいか」を添えると、より具体的なアドバイスがもらえます！</span>
+                        </div>
+                    </div>
+                    <div class="mogi-docs-button-wrap">
+                        <a href="https://docs.google.com/document/d/1VP1SOv5OnzACkYhbGIiYNazyG6Su9tF9aflDpiZ7sRE/edit?usp=drive_link" 
+                           target="_blank" rel="noopener noreferrer" class="btn btn-mogi-cta">
+                            <span>Google Docs を開く</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/><path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Web上のQ&Aピックアップギャラリー -->
+                <div class="mogi-qa-section">
+                    <div class="section-title-wrapper">
+                        <div class="section-title-left">
+                            <span class="section-title-icon">💬</span>
+                            <div>
+                                <h3 class="sub-section-title">ピックアップ Q&A ＆ アドバイス集</h3>
+                                <p class="sub-section-desc">生徒のみんなから寄せられた質問と、茂木さんからの回答をピックアップして掲載しています。</p>
+                            </div>
+                        </div>
+                        <span class="section-title-badge" id="qaCountBadge">Q&A一覧</span>
+                    </div>
+
+                    <div class="qa-cards-grid" id="qaListContainer">
+                        <!-- JavaScriptにより動的レンダリングされます -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 7: 観天望気・思考ツール (Tips & Lore)
              ========================================== -->
         <section id="tab-lore" class="tab-panel no-print">
             <div class="portal-container">
@@ -1174,6 +1308,149 @@
 
     </div>
 
-    <script src="app.js?v=20260917-1"></script>
+    <!-- ======================================================================
+         モーダルダイアログ群
+         ====================================================================== -->
+    <!-- 1. 先生用パスワード認証モーダル -->
+    <div class="modal-backdrop" id="modalPasswordBackdrop" style="display: none;">
+        <div class="modal-box modal-sm">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="modal-icon">🔒</span>
+                    <h3 class="modal-title">先生用編集認証</h3>
+                </div>
+                <button class="modal-close" onclick="closePasswordModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">予定やQ&Aの編集を行うには、先生用パスワードを入力してください。</p>
+                <div class="form-group">
+                    <label for="passwordInput">パスワード</label>
+                    <input type="password" id="passwordInput" class="form-control" placeholder="パスワードを入力" onkeydown="if(event.key==='Enter') verifySchedulePassword()">
+                    <span class="form-error" id="passwordError" style="display: none;">パスワードが正しくありません</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePasswordModal()">キャンセル</button>
+                <button class="btn btn-primary" onclick="verifySchedulePassword()">認証して編集開始</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 予定の追加・編集モーダル -->
+    <div class="modal-backdrop" id="modalScheduleBackdrop" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="modal-icon">📅</span>
+                    <h3 class="modal-title" id="scheduleModalTitle">予定の追加・編集</h3>
+                </div>
+                <button class="modal-close" onclick="closeScheduleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="schedEditIndex" value="-1">
+                
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="schedDate">日付・期間 <span class="required">*</span></label>
+                        <input type="text" id="schedDate" class="form-control" placeholder="例: 2026/09/25 または BH（9/28の週）">
+                    </div>
+                    <div class="form-group">
+                        <label for="schedPhase">フェーズ区分</label>
+                        <select id="schedPhase" class="form-control">
+                            <option value="導入">導入 (phase-intro)</option>
+                            <option value="特別講義">特別講義 (phase-lecture)</option>
+                            <option value="データ収集">データ収集 (phase-work)</option>
+                            <option value="探究" selected>探究 (phase-explore)</option>
+                            <option value="ブロックアワー">ブロックアワー (phase-bh)</option>
+                            <option value="制作">制作 (phase-creation)</option>
+                            <option value="動画制作">動画制作 (phase-creation)</option>
+                            <option value="最終発表">最終発表 (phase-showcase)</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="schedTitle">授業タイトル・活動内容 <span class="required">*</span></label>
+                    <input type="text" id="schedTitle" class="form-control" placeholder="例: 特別な日の気温・湿度・気圧のグラフと天気図から「時間と空間」のつながりを考察">
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="schedLessonTag">種別タグ</label>
+                        <input type="text" id="schedLessonTag" class="form-control" placeholder="例: ミニレッスン / 講義 / 個別探究 / 探究作業">
+                    </div>
+                    <div class="form-group">
+                        <label for="schedLessonDesc">ミニレッスン・補足内容</label>
+                        <input type="text" id="schedLessonDesc" class="form-control" placeholder="例: グラフの見方（気温・湿度・気圧の関係）">
+                    </div>
+                </div>
+
+                <div class="form-group form-check-wrap">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="schedIsBh">
+                        <span>ブロックアワー強調枠にする</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="schedIsGoal">
+                        <span>最終発表（ゴール）強調枠にする</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeScheduleModal()">キャンセル</button>
+                <button class="btn btn-primary" onclick="saveScheduleItem()">保存する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 茂木さんQ&Aの追加・編集モーダル -->
+    <div class="modal-backdrop" id="modalQABackdrop" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="modal-icon">💬</span>
+                    <h3 class="modal-title" id="qaModalTitle">Q&Aの追加・編集</h3>
+                </div>
+                <button class="modal-close" onclick="closeQAModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="qaEditIndex" value="-1">
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label for="qaCategory">カテゴリ・タグ</label>
+                        <input type="text" id="qaCategory" class="form-control" placeholder="例: 番組づくり / 天気図 / 観天望気 / 特別講義">
+                    </div>
+                    <div class="form-group">
+                        <label for="qaQuestioner">質問者（名前や学年など）</label>
+                        <input type="text" id="qaQuestioner" class="form-control" placeholder="例: 2年生 生徒 / チームA">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="qaQuestion">質問内容 <span class="required">*</span></label>
+                    <textarea id="qaQuestion" class="form-control" rows="3" placeholder="生徒からの疑問や相談内容を入力"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="qaAnswer">茂木さんからの回答・アドバイス <span class="required">*</span></label>
+                    <textarea id="qaAnswer" class="form-control" rows="4" placeholder="茂木さんからのプロのアドバイスや解説を入力"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeQAModal()">キャンセル</button>
+                <button class="btn btn-primary" onclick="saveQAItem()">保存する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- トースト通知 -->
+    <div class="toast-notification" id="toastNotification" style="display: none;">
+        <span class="toast-icon">✅</span>
+        <span class="toast-text" id="toastText">メッセージ</span>
+    </div>
+
+    <script src="app.js?v=20260921-2"></script>
 </body>
 </html>

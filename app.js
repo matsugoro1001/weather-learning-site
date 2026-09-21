@@ -53,6 +53,9 @@ const state = {
 window.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initEventListeners();
+    initScheduleManager();
+    initTopicsLearning();
+    initMogiQAManager();
     loadDefaultData();
     updateLocationDisplay();
     setupCanvasDrag();
@@ -112,7 +115,7 @@ function initNavigation() {
 
 function initTabFromHash() {
     const hash = window.location.hash.replace('#', '');
-    const validTabs = ['mission', 'rubric', 'schedule', 'links', 'drive', 'lore', 'generator'];
+    const validTabs = ['mission', 'rubric', 'schedule', 'links', 'drive', 'mogi', 'lore', 'generator'];
     if (hash && validTabs.includes(hash)) {
         switchTab(`tab-${hash}`);
     } else {
@@ -1676,3 +1679,917 @@ function setupCanvasDrag() {
         window.addEventListener('touchend', endDrag);
     }
 }
+
+// ==========================================================================
+// 10. 授業予定マネージャー (Web編集・パスワード保護・動的レンダリング)
+// ==========================================================================
+
+const STORAGE_KEY_SCHEDULE = 'weather_portal_schedule';
+const ADMIN_PASSWORD = 'weather2026';
+let isScheduleAdmin = false;
+
+// デフォルト予定データ（14回分）
+const defaultScheduleData = [
+    { date: "2026/09/14", phase: "導入", phaseClass: "phase-intro", title: "ルーブリック提示・ガイダンス / 特別な日を決める", lessonTag: "ミニレッスン", lessonDesc: "気象要素について", isBh: false, isGoal: false },
+    { date: "2026/09/16", phase: "特別講義", phaseClass: "phase-lecture", title: "気象予報士からの特別講義", lessonTag: "講義", lessonDesc: "プロの気象予報士から気象の見方・番組づくりのコツを学ぶ", isBh: false, isGoal: false },
+    { date: "2026/09/17", phase: "データ収集", phaseClass: "phase-work", title: "特別な日を決めてHPでグラフと天気図のプリントをつくる / 「時間と空間」のつながりを考察する", lessonTag: "ミニレッスン", lessonDesc: "グラフの見方（気温・湿度・気圧の関係）", isBh: false, isGoal: false },
+    { date: "2026/09/25", phase: "探究", phaseClass: "phase-explore", title: "観天望気を事象のつながりを整理して科学的に考察", lessonTag: "ミニレッスン", lessonDesc: "観天望気とは（先人の知恵と科学の架け橋）", isBh: false, isGoal: false },
+    { date: "2026/09/28", phase: "探究", phaseClass: "phase-explore", title: "特別な日の気温・湿度・気圧のグラフと天気図から「時間と空間」のつながりを考察", lessonTag: "ミニレッスン", lessonDesc: "天気図の見方・活用サイトの紹介", isBh: false, isGoal: false },
+    { date: "2026/09/30", phase: "探究", phaseClass: "phase-explore", title: "観天望気を事象のつながりを整理して科学的に考察（思考ツール活用）", lessonTag: "探究作業", lessonDesc: "ステップチャート・クラゲチャートで深める", isBh: false, isGoal: false },
+    { date: "2026/10/02", phase: "探究", phaseClass: "phase-explore", title: "観天望気を事象のつながりを整理して科学的に考察（まとめと共有）", lessonTag: "探究作業", lessonDesc: "科学的根拠の整理と参考文献の記録", isBh: false, isGoal: false },
+    { date: "BH（9/28の週）", phase: "ブロックアワー", phaseClass: "phase-bh", title: "スライドづくり（構成案・原稿の下書き）", lessonTag: "個別探究", lessonDesc: "構成シートと台本の作成", isBh: true, isGoal: false },
+    { date: "2026/10/13", phase: "制作", phaseClass: "phase-creation", title: "スライドづくり（天気の空間的・時間的解説の作成）", lessonTag: "ミニレッスン", lessonDesc: "四季による天気図の特徴", isBh: false, isGoal: false },
+    { date: "BH（10/12の週）", phase: "ブロックアワー", phaseClass: "phase-bh", title: "スライドづくり（スライド完成・発表リハーサル）", lessonTag: "個別探究", lessonDesc: "スライド完成と発表練習", isBh: true, isGoal: false },
+    { date: "2026/10/19", phase: "動画制作", phaseClass: "phase-creation", title: "天気予報動画の作成（撮影開始）", lessonTag: "ミニレッスン", lessonDesc: "動画の撮り方（見やすい画面・聞き取りやすい話し方）", isBh: false, isGoal: false },
+    { date: "2026/10/21", phase: "動画制作", phaseClass: "phase-creation", title: "天気予報動画の作成（撮影・編集）", lessonTag: "制作作業", lessonDesc: "動画のブラッシュアップ", isBh: false, isGoal: false },
+    { date: "2026/10/23", phase: "動画制作", phaseClass: "phase-creation", title: "天気予報動画の作成（動画完成・最終提出）", lessonTag: "制作作業", lessonDesc: "提出用フォルダへアップロード", isBh: false, isGoal: false },
+    { date: "2026/10/27", phase: "最終発表", phaseClass: "phase-showcase", title: "鑑賞会（お互いの番組を見合って相互評価・振り返り）", lessonTag: "発表・省察", lessonDesc: "ルーブリックを用いた振り返り", isBh: false, isGoal: true }
+];
+
+function getScheduleData() {
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY_SCHEDULE);
+        if (stored) {
+            return JSON.parse(stored);
+        }
+    } catch (e) {
+        console.warn('LocalStorage error:', e);
+    }
+    return defaultScheduleData;
+}
+
+function saveScheduleData(data) {
+    try {
+        localStorage.setItem(STORAGE_KEY_SCHEDULE, JSON.stringify(data));
+    } catch (e) {
+        console.warn('LocalStorage save error:', e);
+    }
+}
+
+function initScheduleManager() {
+    renderScheduleTimeline();
+}
+
+function getPhaseClassFromPhase(phase) {
+    switch (phase) {
+        case '導入': return 'phase-intro';
+        case '特別講義': return 'phase-lecture';
+        case 'データ収集': return 'phase-work';
+        case '探究': return 'phase-explore';
+        case 'ブロックアワー': return 'phase-bh';
+        case '制作':
+        case '動画制作': return 'phase-creation';
+        case '最終発表': return 'phase-showcase';
+        default: return 'phase-explore';
+    }
+}
+
+function renderScheduleTimeline() {
+    const container = document.getElementById('scheduleTimeline');
+    if (!container) return;
+
+    const data = getScheduleData();
+    container.innerHTML = '';
+
+    data.forEach((item, index) => {
+        const row = document.createElement('div');
+        let classes = ['schedule-row'];
+        if (item.isBh) classes.push('schedule-bh');
+        if (item.isGoal) classes.push('schedule-goal');
+        row.className = classes.join(' ');
+
+        const pClass = item.phaseClass || getPhaseClassFromPhase(item.phase);
+
+        let adminActionsHtml = '';
+        if (isScheduleAdmin) {
+            adminActionsHtml = `
+                <div class="schedule-admin-actions">
+                    <button class="btn-icon-action btn-move-up" onclick="moveScheduleItem(${index}, -1)" title="上へ移動" ${index === 0 ? 'disabled' : ''}>⬆️</button>
+                    <button class="btn-icon-action btn-move-down" onclick="moveScheduleItem(${index}, 1)" title="下へ移動" ${index === data.length - 1 ? 'disabled' : ''}>⬇️</button>
+                    <button class="btn-icon-action btn-edit" onclick="openScheduleModal(${index})" title="編集">✏️ 編集</button>
+                    <button class="btn-icon-action btn-delete" onclick="deleteScheduleItem(${index})" title="削除">🗑️</button>
+                </div>
+            `;
+        }
+
+        row.innerHTML = `
+            <div class="schedule-date-badge">${escapeHtml(item.date)}</div>
+            <div class="schedule-content">
+                <div class="schedule-main">
+                    <span class="schedule-phase ${pClass}">${escapeHtml(item.phase)}</span>
+                    <h4>${escapeHtml(item.title)}</h4>
+                </div>
+                ${item.lessonTag || item.lessonDesc ? `
+                    <div class="schedule-lesson">
+                        ${item.lessonTag ? `<span class="lesson-tag">${escapeHtml(item.lessonTag)}</span>` : ''}
+                        ${item.lessonDesc ? `<span>${escapeHtml(item.lessonDesc)}</span>` : ''}
+                    </div>
+                ` : ''}
+                ${adminActionsHtml}
+            </div>
+        `;
+
+        container.appendChild(row);
+    });
+
+    // 先生用ツールバーとロックボタンの状態を更新
+    const toolbar = document.getElementById('scheduleAdminToolbar');
+    const lockIcon = document.getElementById('lockIcon');
+    const lockText = document.getElementById('lockText');
+    const btnLock = document.getElementById('btnScheduleLock');
+    const mogiAdminActions = document.getElementById('mogiAdminActions');
+
+    if (toolbar) toolbar.style.display = isScheduleAdmin ? 'flex' : 'none';
+    if (lockIcon) lockIcon.textContent = isScheduleAdmin ? '🔓' : '🔒';
+    if (lockText) lockText.textContent = isScheduleAdmin ? '編集中（クリックで終了）' : '先生用編集';
+    if (btnLock) {
+        if (isScheduleAdmin) {
+            btnLock.classList.add('active');
+        } else {
+            btnLock.classList.remove('active');
+        }
+    }
+    if (mogiAdminActions) {
+        mogiAdminActions.style.display = isScheduleAdmin ? 'flex' : 'none';
+    }
+}
+
+function toggleScheduleEditMode() {
+    if (isScheduleAdmin) {
+        exitScheduleEditMode();
+    } else {
+        openPasswordModal();
+    }
+}
+window.toggleScheduleEditMode = toggleScheduleEditMode;
+
+function openPasswordModal() {
+    const backdrop = document.getElementById('modalPasswordBackdrop');
+    const input = document.getElementById('passwordInput');
+    const err = document.getElementById('passwordError');
+    if (backdrop) backdrop.style.display = 'flex';
+    if (err) err.style.display = 'none';
+    if (input) {
+        input.value = '';
+        setTimeout(() => input.focus(), 100);
+    }
+}
+window.openPasswordModal = openPasswordModal;
+
+function closePasswordModal() {
+    const backdrop = document.getElementById('modalPasswordBackdrop');
+    if (backdrop) backdrop.style.display = 'none';
+}
+window.closePasswordModal = closePasswordModal;
+
+function verifySchedulePassword() {
+    const input = document.getElementById('passwordInput');
+    const err = document.getElementById('passwordError');
+    if (!input) return;
+
+    if (input.value === ADMIN_PASSWORD) {
+        isScheduleAdmin = true;
+        closePasswordModal();
+        renderScheduleTimeline();
+        renderMogiQASection();
+        showToast('先生用編集モードを有効にしました');
+    } else {
+        if (err) {
+            err.style.display = 'block';
+            err.textContent = 'パスワードが違います（初期値: weather2026）';
+        }
+    }
+}
+window.verifySchedulePassword = verifySchedulePassword;
+
+function exitScheduleEditMode() {
+    isScheduleAdmin = false;
+    renderScheduleTimeline();
+    renderMogiQASection();
+    showToast('編集モードを終了しました');
+}
+window.exitScheduleEditMode = exitScheduleEditMode;
+
+function openScheduleModal(index = -1) {
+    const backdrop = document.getElementById('modalScheduleBackdrop');
+    const titleEl = document.getElementById('scheduleModalTitle');
+    const idxInput = document.getElementById('schedEditIndex');
+    const dateInput = document.getElementById('schedDate');
+    const phaseSelect = document.getElementById('schedPhase');
+    const titleInput = document.getElementById('schedTitle');
+    const tagInput = document.getElementById('schedLessonTag');
+    const descInput = document.getElementById('schedLessonDesc');
+    const isBhCheck = document.getElementById('schedIsBh');
+    const isGoalCheck = document.getElementById('schedIsGoal');
+
+    if (!backdrop) return;
+
+    if (index >= 0) {
+        const data = getScheduleData();
+        const item = data[index];
+        titleEl.textContent = '予定を編集';
+        idxInput.value = index;
+        dateInput.value = item.date || '';
+        phaseSelect.value = item.phase || '探究';
+        titleInput.value = item.title || '';
+        tagInput.value = item.lessonTag || '';
+        descInput.value = item.lessonDesc || '';
+        isBhCheck.checked = !!item.isBh;
+        isGoalCheck.checked = !!item.isGoal;
+    } else {
+        titleEl.textContent = '予定を新規追加';
+        idxInput.value = -1;
+        dateInput.value = '';
+        phaseSelect.value = '探究';
+        titleInput.value = '';
+        tagInput.value = 'ミニレッスン';
+        descInput.value = '';
+        isBhCheck.checked = false;
+        isGoalCheck.checked = false;
+    }
+
+    backdrop.style.display = 'flex';
+}
+window.openScheduleModal = openScheduleModal;
+
+function closeScheduleModal() {
+    const backdrop = document.getElementById('modalScheduleBackdrop');
+    if (backdrop) backdrop.style.display = 'none';
+}
+window.closeScheduleModal = closeScheduleModal;
+
+function saveScheduleItem() {
+    const idx = parseInt(document.getElementById('schedEditIndex').value, 10);
+    const date = document.getElementById('schedDate').value.trim();
+    const phase = document.getElementById('schedPhase').value;
+    const title = document.getElementById('schedTitle').value.trim();
+    const lessonTag = document.getElementById('schedLessonTag').value.trim();
+    const lessonDesc = document.getElementById('schedLessonDesc').value.trim();
+    const isBh = document.getElementById('schedIsBh').checked;
+    const isGoal = document.getElementById('schedIsGoal').checked;
+
+    if (!date || !title) {
+        alert('日付と授業タイトルは必須入力です。');
+        return;
+    }
+
+    const item = {
+        date,
+        phase,
+        phaseClass: getPhaseClassFromPhase(phase),
+        title,
+        lessonTag,
+        lessonDesc,
+        isBh,
+        isGoal
+    };
+
+    const data = [...getScheduleData()];
+    if (idx >= 0 && idx < data.length) {
+        data[idx] = item;
+    } else {
+        data.push(item);
+    }
+
+    saveScheduleData(data);
+    closeScheduleModal();
+    renderScheduleTimeline();
+    showToast('予定を保存しました');
+}
+window.saveScheduleItem = saveScheduleItem;
+
+function deleteScheduleItem(index) {
+    const data = getScheduleData();
+    if (!data[index]) return;
+    if (confirm(`「${data[index].date}: ${data[index].title}」を削除してもよろしいですか？`)) {
+        const newData = data.filter((_, i) => i !== index);
+        saveScheduleData(newData);
+        renderScheduleTimeline();
+        showToast('予定を削除しました');
+    }
+}
+window.deleteScheduleItem = deleteScheduleItem;
+
+function moveScheduleItem(index, direction) {
+    const data = [...getScheduleData()];
+    const targetIdx = index + direction;
+    if (targetIdx < 0 || targetIdx >= data.length) return;
+
+    const temp = data[index];
+    data[index] = data[targetIdx];
+    data[targetIdx] = temp;
+
+    saveScheduleData(data);
+    renderScheduleTimeline();
+}
+window.moveScheduleItem = moveScheduleItem;
+
+function exportScheduleCode() {
+    const data = getScheduleData();
+    const jsonStr = JSON.stringify(data, null, 4);
+    navigator.clipboard.writeText(jsonStr).then(() => {
+        showToast('最新予定データをクリップボードにコピーしました！コードに貼り付け可能です');
+    }).catch(() => {
+        prompt('以下のJSONデータをコピーして保存してください:', jsonStr);
+    });
+}
+window.exportScheduleCode = exportScheduleCode;
+
+function resetScheduleData() {
+    if (confirm('予定を初期状態に戻しますか？（現在の編集内容は上書きされます）')) {
+        saveScheduleData(defaultScheduleData);
+        renderScheduleTimeline();
+        showToast('予定を初期データにリセットしました');
+    }
+}
+window.resetScheduleData = resetScheduleData;
+
+// ==========================================================================
+// 11. 単元項目別・学習リソースまとめ (5項目 ✕ 4リソース)
+// ==========================================================================
+
+const learningTopicsData = [
+    {
+        id: 1,
+        number: "1",
+        title: "気象要素（気温、湿度、気圧、天気、風向・風力）の表し方",
+        badge: "基礎知識・観測",
+        desc: "気温・湿度・気圧の測定方法や乾湿計の使い方、天気記号・風向風力（16方位・風力階級）の正しい表し方を復習できます。",
+        resources: [
+            {
+                type: "video",
+                title: "授業動画（ミニレッスン）",
+                siteName: "授業アーカイブ",
+                badge: "授業動画",
+                desc: "気象要素の測り方と記録のポイント解説動画",
+                url: "https://drive.google.com/drive/folders/1jyatzgB6JkxwR0Z9dQuqXE9kdFIy8q7K",
+                icon: "🎥",
+                isPlaceholder: true
+            },
+            {
+                type: "sawanii",
+                title: "さわにいの理科サイト",
+                siteName: "さわにい",
+                badge: "図解解説",
+                desc: "気温・湿度・気圧・天気記号の表し方をわかりやすく図解",
+                url: "https://sawanii.ne.jp/",
+                icon: "👨‍🏫",
+                isPlaceholder: true
+            },
+            {
+                type: "asunaro",
+                title: "あすなろ学習室",
+                siteName: "あすなろ学習室",
+                badge: "学習教材",
+                desc: "気象観測の基礎とデータ整理のアニメーション解説",
+                url: "https://www.shizuoka-c.ed.jp/",
+                icon: "📖",
+                isPlaceholder: true
+            },
+            {
+                type: "furikaeru",
+                title: "理科の授業をふりかえる",
+                siteName: "理科の授業をふりかえる",
+                badge: "YouTube復習",
+                desc: "乾湿計の使い方や気象要素の測定実験の振り返り動画",
+                url: "https://www.youtube.com/results?search_query=%E7%90%86%E7%A7%91%E3%81%AE%E6%8E%88%E6%A5%AD%E3%82%92%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8B+%E6%B0%97%E8%B1%A1%E8%A6%81%E7%B4%A0",
+                icon: "🎬",
+                isPlaceholder: true
+            }
+        ]
+    },
+    {
+        id: 2,
+        number: "2",
+        title: "【時間的視点】気温・湿度・気圧のグラフの読み取り方",
+        badge: "グラフ分析",
+        desc: "1日の中での気温と湿度の逆位相の動き（日変化）や、前線通過・天候急変時の急激な気圧・気温の変化を複合グラフから読み解きます。",
+        resources: [
+            {
+                type: "video",
+                title: "授業動画（ミニレッスン）",
+                siteName: "授業アーカイブ",
+                badge: "授業動画",
+                desc: "気温・湿度・気圧のグラフから天気の変化を分析するコツ",
+                url: "https://drive.google.com/drive/folders/1jyatzgB6JkxwR0Z9dQuqXE9kdFIy8q7K",
+                icon: "🎥",
+                isPlaceholder: true
+            },
+            {
+                type: "sawanii",
+                title: "さわにいの理科サイト",
+                siteName: "さわにい",
+                badge: "図解解説",
+                desc: "晴れの日・雨の日の気温と湿度のグラフ変化の徹底比較",
+                url: "https://sawanii.ne.jp/",
+                icon: "👨‍🏫",
+                isPlaceholder: true
+            },
+            {
+                type: "asunaro",
+                title: "あすなろ学習室",
+                siteName: "あすなろ学習室",
+                badge: "学習教材",
+                desc: "1日の天気の変化と気象データの読み取り練習",
+                url: "https://www.shizuoka-c.ed.jp/",
+                icon: "📖",
+                isPlaceholder: true
+            },
+            {
+                type: "furikaeru",
+                title: "理科の授業をふりかえる",
+                siteName: "理科の授業をふりかえる",
+                badge: "YouTube復習",
+                desc: "グラフの波形から天気を読み取るテクニック解説動画",
+                url: "https://www.youtube.com/results?search_query=%E7%90%86%E7%A7%91%E3%81%AE%E6%8E%88%E6%A5%AD%E3%82%92%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8B+%E6%B0%97%E6%B8%A9+%E6%B9%BF%E5%BA%A6+%E3%82%B0%E3%83%A9%E3%83%97",
+                icon: "🎬",
+                isPlaceholder: true
+            }
+        ]
+    },
+    {
+        id: 3,
+        number: "3",
+        title: "【空間的視点】天気図の読み取り方1（気団、前線、温帯低気圧）",
+        badge: "前線・低気圧",
+        desc: "日本付近の高気圧・低気圧、寒冷前線・温暖前線の立体構造と、前線通過に伴う風向きや雨の変化を空間的に理解します。",
+        resources: [
+            {
+                type: "video",
+                title: "授業動画（ミニレッスン）",
+                siteName: "授業アーカイブ",
+                badge: "授業動画",
+                desc: "天気図の見方・前線の断面図と雨の降るエリアの解説",
+                url: "https://drive.google.com/drive/folders/1jyatzgB6JkxwR0Z9dQuqXE9kdFIy8q7K",
+                icon: "🎥",
+                isPlaceholder: true
+            },
+            {
+                type: "sawanii",
+                title: "さわにいの理科サイト",
+                siteName: "さわにい",
+                badge: "図解解説",
+                desc: "寒冷前線と温暖前線の違い、温帯低気圧の天気を図解",
+                url: "https://sawanii.ne.jp/",
+                icon: "👨‍🏫",
+                isPlaceholder: true
+            },
+            {
+                type: "asunaro",
+                title: "あすなろ学習室",
+                siteName: "あすなろ学習室",
+                badge: "学習教材",
+                desc: "前線の動きと天気の変化のシミュレーション",
+                url: "https://www.shizuoka-c.ed.jp/",
+                icon: "📖",
+                isPlaceholder: true
+            },
+            {
+                type: "furikaeru",
+                title: "理科の授業をふりかえる",
+                siteName: "理科の授業をふりかえる",
+                badge: "YouTube復習",
+                desc: "前線の立体構造と通過前後の天気の変化動画",
+                url: "https://www.youtube.com/results?search_query=%E7%90%86%E7%A7%91%E3%81%AE%E6%8E%88%E6%A5%AD%E3%82%92%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8B+%E5%89%8D%E7%B7%9A+%E5%A4%A9%E6%B0%97%E5%9B%B3",
+                icon: "🎬",
+                isPlaceholder: true
+            }
+        ]
+    },
+    {
+        id: 4,
+        number: "4",
+        title: "【空間的視点】天気図の読み取り方2（四季による天気図の違い）",
+        badge: "四季の気圧配置",
+        desc: "春・梅雨・夏・秋・冬（西高東低、南高北低、移動性高気圧など）の季節ごとの気圧配置の特徴と、日本各地の天候パターンを学びます。",
+        resources: [
+            {
+                type: "video",
+                title: "授業動画（ミニレッスン）",
+                siteName: "授業アーカイブ",
+                badge: "授業動画",
+                desc: "日本の四季と代表的な気圧配置パターンの解説",
+                url: "https://drive.google.com/drive/folders/1jyatzgB6JkxwR0Z9dQuqXE9kdFIy8q7K",
+                icon: "🎥",
+                isPlaceholder: true
+            },
+            {
+                type: "sawanii",
+                title: "さわにいの理科サイト",
+                siteName: "さわにい",
+                badge: "図解解説",
+                desc: "日本の四季の気圧配置（冬型・夏型・梅雨前線など）まとめ",
+                url: "https://sawanii.ne.jp/",
+                icon: "👨‍🏫",
+                isPlaceholder: true
+            },
+            {
+                type: "asunaro",
+                title: "あすなろ学習室",
+                siteName: "あすなろ学習室",
+                badge: "学習教材",
+                desc: "四季の天気図クイズと季節風の仕組み",
+                url: "https://www.shizuoka-c.ed.jp/",
+                icon: "📖",
+                isPlaceholder: true
+            },
+            {
+                type: "furikaeru",
+                title: "理科の授業をふりかえる",
+                siteName: "理科の授業をふりかえる",
+                badge: "YouTube復習",
+                desc: "四季の天気の特徴と気圧配置の見分け方動画",
+                url: "https://www.youtube.com/results?search_query=%E7%90%86%E7%A7%91%E3%81%AE%E6%8E%88%E6%A5%AD%E3%82%92%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8B+%E5%9B%9B%E5%AD%A3%E3%81%AE%E5%A4%A9%E6%B0%97",
+                icon: "🎬",
+                isPlaceholder: true
+            }
+        ]
+    },
+    {
+        id: 5,
+        number: "5",
+        title: "雲ができる仕組みと水の循環（メカニズム編）",
+        badge: "雲・露点・循環",
+        desc: "空気が上昇して膨張し、温度が下がって凝結する（露点）プロセスや、雨・雪が降るメカニズム、地球規模の水のめぐりを解明します。",
+        resources: [
+            {
+                type: "video",
+                title: "授業動画（ミニレッスン）",
+                siteName: "授業アーカイブ",
+                badge: "授業動画",
+                desc: "空気の上昇と断熱膨張、雲の発生実験の解説",
+                url: "https://drive.google.com/drive/folders/1jyatzgB6JkxwR0Z9dQuqXE9kdFIy8q7K",
+                icon: "🎥",
+                isPlaceholder: true
+            },
+            {
+                type: "sawanii",
+                title: "さわにいの理科サイト",
+                siteName: "さわにい",
+                badge: "図解解説",
+                desc: "飽和水蒸気量・露点・湿度の計算と雲ができる仕組み",
+                url: "https://sawanii.ne.jp/",
+                icon: "👨‍🏫",
+                isPlaceholder: true
+            },
+            {
+                type: "asunaro",
+                title: "あすなろ学習室",
+                siteName: "あすなろ学習室",
+                badge: "学習教材",
+                desc: "注射器やフラスコを使った雲の発生実験と水の循環",
+                url: "https://www.shizuoka-c.ed.jp/",
+                icon: "📖",
+                isPlaceholder: true
+            },
+            {
+                type: "furikaeru",
+                title: "理科の授業をふりかえる",
+                siteName: "理科の授業をふりかえる",
+                badge: "YouTube復習",
+                desc: "雲ができる理由と飽和水蒸気量の考え方解説動画",
+                url: "https://www.youtube.com/results?search_query=%E7%90%86%E7%A7%91%E3%81%AE%E6%8E%88%E6%A5%AD%E3%82%92%E3%81%B5%E3%82%8A%E3%81%8B%E3%81%88%E3%82%8B+%E9%9B%B2%E3%81%8C%E3%81%A7%E3%81%8D%E3%82%8B%E4%BB%95%E7%B5%84%E3%81%BF",
+                icon: "🎬",
+                isPlaceholder: true
+            }
+        ]
+    }
+];
+
+function initTopicsLearning() {
+    renderTopicsLearningSection();
+}
+
+function renderTopicsLearningSection() {
+    const container = document.getElementById('topicsContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    learningTopicsData.forEach((topic, tIdx) => {
+        const item = document.createElement('div');
+        item.className = 'topic-accordion-item' + (tIdx === 0 ? ' active' : '');
+
+        const resCardsHtml = topic.resources.map(res => `
+            <div class="topic-res-card res-type-${res.type}">
+                <div class="res-card-top">
+                    <span class="res-badge res-badge-${res.type}">${escapeHtml(res.badge)}</span>
+                    <span class="res-icon">${res.icon}</span>
+                </div>
+                <h5 class="res-title">${escapeHtml(res.title)}</h5>
+                <p class="res-sitename">${escapeHtml(res.siteName)}</p>
+                <p class="res-desc">${escapeHtml(res.desc)}</p>
+                <div class="res-action">
+                    <a href="${escapeHtml(res.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-res-link">
+                        <span>開く</span> ↗
+                    </a>
+                    ${res.isPlaceholder ? '<span class="res-note-badge">※URL準備中</span>' : ''}
+                </div>
+            </div>
+        `).join('');
+
+        item.innerHTML = `
+            <div class="topic-header" onclick="toggleTopicAccordion(${tIdx})">
+                <div class="topic-header-left">
+                    <span class="topic-number">第${topic.number}テーマ</span>
+                    <h4 class="topic-title">${escapeHtml(topic.title)}</h4>
+                    <span class="topic-badge">${escapeHtml(topic.badge)}</span>
+                </div>
+                <span class="topic-arrow">▼</span>
+            </div>
+            <div class="topic-body">
+                <p class="topic-intro">${escapeHtml(topic.desc)}</p>
+                <div class="topic-res-grid">
+                    ${resCardsHtml}
+                </div>
+            </div>
+        `;
+
+        container.appendChild(item);
+    });
+}
+
+function toggleTopicAccordion(index) {
+    const items = document.querySelectorAll('.topic-accordion-item');
+    if (items[index]) {
+        items[index].classList.toggle('active');
+    }
+}
+window.toggleTopicAccordion = toggleTopicAccordion;
+
+// ==========================================================================
+// 12. 気象予報士 茂木さんへの質問マネージャー (Q&A管理)
+// ==========================================================================
+
+const STORAGE_KEY_MOGI_QA = 'weather_portal_mogi_qa';
+
+// デフォルトQ&Aデータ（代表的なサンプル質問＆茂木さんからの回答）
+const defaultMogiQAData = [
+    {
+        id: 1,
+        category: "番組づくり",
+        questioner: "中2 生徒",
+        question: "お天気番組をつくるときに、視聴者に一番伝わりやすくするためのコツは何ですか？",
+        answer: "「専門用語をそのまま言わず、日常の言葉や身近な生活シーンに言い換えること」です！\n\n例えば『寒冷前線が通過します』だけだと難しく感じますが、『午後は急に冷たい北風が吹いて、激しい雨がザッと降ります。折りたたみ傘よりもレインコートや長靴が安心です』のように、視聴者が『じゃあ自分はどう行動すればいいか』を具体的にイメージできるように伝えるのがプロのコツですよ。",
+        date: "2026/09/16"
+    },
+    {
+        id: 2,
+        category: "天気図の読み方",
+        questioner: "気象探究チーム",
+        question: "等圧線が狭くなっているところと広いところでは、風の強さはどう違いますか？",
+        answer: "等圧線が狭い（混んでいる）ところほど気圧の傾きが急で、強い風が吹き荒れます！\n\n山の地図で言うと『等高線が狭い＝急な崖・坂道』のようなイメージですね。空気が崖を一気に転がり落ちるように勢いよく流れます。逆に等圧線が広いところは風が穏やかで、天候も比較的安定しやすいです。",
+        date: "2026/09/18"
+    },
+    {
+        id: 3,
+        category: "観天望気",
+        questioner: "中2 生徒",
+        question: "「夕焼けの次の日は晴れ」というのは、科学的にはどうしてそうなるのですか？",
+        answer: "日本の上空では、常に西から東へ偏西風（へんせいふう）が吹いていて、天気も西から東へと移り変わる性質があります。\n\n夕焼けが見えるということは、『西の空に雨雲がなくカラッと晴れている』証拠です。その西の晴れのエリアが翌日自分たちの頭上へやってくるため、次の日も晴れる確率が高いのです！昔の人は科学の知識がなくても、経験からこの法則に気づいていたんですね。",
+        date: "2026/09/20"
+    }
+];
+
+function getMogiQAData() {
+    try {
+        const stored = localStorage.getItem(STORAGE_KEY_MOGI_QA);
+        if (stored) {
+            return JSON.parse(stored);
+        }
+    } catch (e) {
+        console.warn('LocalStorage error:', e);
+    }
+    return defaultMogiQAData;
+}
+
+function saveMogiQAData(data) {
+    try {
+        localStorage.setItem(STORAGE_KEY_MOGI_QA, JSON.stringify(data));
+    } catch (e) {
+        console.warn('LocalStorage save error:', e);
+    }
+}
+
+function initMogiQAManager() {
+    renderMogiQASection();
+}
+
+function renderMogiQASection() {
+    const container = document.getElementById('qaListContainer');
+    const badge = document.getElementById('qaCountBadge');
+    if (!container) return;
+
+    const data = getMogiQAData();
+    if (badge) badge.textContent = `全${data.length}件`;
+
+    container.innerHTML = '';
+
+    if (data.length === 0) {
+        container.innerHTML = `
+            <div class="qa-empty">
+                <p>現在登録されているQ&Aはありません。「Google Docs を開く」から質問を投稿するか、先生用モードで追加してください。</p>
+            </div>
+        `;
+        return;
+    }
+
+    data.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'qa-card';
+
+        let adminActionsHtml = '';
+        if (isScheduleAdmin) {
+            adminActionsHtml = `
+                <div class="qa-admin-actions">
+                    <button class="btn-icon-action btn-edit" onclick="openQAModal(${index})" title="編集">✏️ 編集</button>
+                    <button class="btn-icon-action btn-delete" onclick="deleteQAItem(${index})" title="削除">🗑️ 削除</button>
+                </div>
+            `;
+        }
+
+        // 回答テキスト内の改行を反映
+        const formattedAnswer = escapeHtml(item.answer).replace(/\n/g, '<br>');
+
+        card.innerHTML = `
+            <div class="qa-card-header">
+                <div class="qa-meta-left">
+                    <span class="qa-category-tag">${escapeHtml(item.category || '気象の疑問')}</span>
+                    <span class="qa-questioner">${escapeHtml(item.questioner || '生徒からの質問')}</span>
+                </div>
+                <div class="qa-meta-right">
+                    ${item.date ? `<span class="qa-date">${escapeHtml(item.date)}</span>` : ''}
+                    ${adminActionsHtml}
+                </div>
+            </div>
+            
+            <div class="qa-question-box">
+                <div class="qa-q-badge">Q</div>
+                <div class="qa-q-text">
+                    <h4>${escapeHtml(item.question)}</h4>
+                </div>
+            </div>
+
+            <div class="qa-answer-box">
+                <div class="qa-expert-avatar">
+                    <span class="avatar-icon">👨‍💼</span>
+                    <span class="avatar-name">茂木さん</span>
+                </div>
+                <div class="qa-a-speech">
+                    <div class="qa-a-header">気象予報士 茂木さんからの回答・アドバイス：</div>
+                    <p class="qa-a-text">${formattedAnswer}</p>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+function openQAModal(index = -1) {
+    const backdrop = document.getElementById('modalQABackdrop');
+    const titleEl = document.getElementById('qaModalTitle');
+    const idxInput = document.getElementById('qaEditIndex');
+    const catInput = document.getElementById('qaCategory');
+    const qerInput = document.getElementById('qaQuestioner');
+    const qInput = document.getElementById('qaQuestion');
+    const aInput = document.getElementById('qaAnswer');
+
+    if (!backdrop) return;
+
+    if (index >= 0) {
+        const data = getMogiQAData();
+        const item = data[index];
+        titleEl.textContent = 'Q&Aを編集';
+        idxInput.value = index;
+        catInput.value = item.category || '';
+        qerInput.value = item.questioner || '';
+        qInput.value = item.question || '';
+        aInput.value = item.answer || '';
+    } else {
+        titleEl.textContent = 'Q&Aを新規追加';
+        idxInput.value = -1;
+        catInput.value = '番組づくり';
+        qerInput.value = '2年生 生徒';
+        qInput.value = '';
+        aInput.value = '';
+    }
+
+    backdrop.style.display = 'flex';
+}
+window.openQAModal = openQAModal;
+
+function closeQAModal() {
+    const backdrop = document.getElementById('modalQABackdrop');
+    if (backdrop) backdrop.style.display = 'none';
+}
+window.closeQAModal = closeQAModal;
+
+function saveQAItem() {
+    const idx = parseInt(document.getElementById('qaEditIndex').value, 10);
+    const category = document.getElementById('qaCategory').value.trim() || '気象の疑問';
+    const questioner = document.getElementById('qaQuestioner').value.trim() || '生徒';
+    const question = document.getElementById('qaQuestion').value.trim();
+    const answer = document.getElementById('qaAnswer').value.trim();
+
+    if (!question || !answer) {
+        alert('質問内容と回答内容は必須入力です。');
+        return;
+    }
+
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
+
+    const item = {
+        id: Date.now(),
+        category,
+        questioner,
+        question,
+        answer,
+        date: dateStr
+    };
+
+    const data = [...getMogiQAData()];
+    if (idx >= 0 && idx < data.length) {
+        item.id = data[idx].id;
+        item.date = data[idx].date || dateStr;
+        data[idx] = item;
+    } else {
+        data.unshift(item); // 新しいものを先頭に
+    }
+
+    saveMogiQAData(data);
+    closeQAModal();
+    renderMogiQASection();
+    showToast('Q&Aを保存しました');
+}
+window.saveQAItem = saveQAItem;
+
+function deleteQAItem(index) {
+    const data = getMogiQAData();
+    if (!data[index]) return;
+    if (confirm(`このQ&Aを削除してもよろしいですか？\n\n質問: ${data[index].question.substring(0, 30)}...`)) {
+        const newData = data.filter((_, i) => i !== index);
+        saveMogiQAData(newData);
+        renderMogiQASection();
+        showToast('Q&Aを削除しました');
+    }
+}
+window.deleteQAItem = deleteQAItem;
+
+function exportQACode() {
+    const data = getMogiQAData();
+    const jsonStr = JSON.stringify(data, null, 4);
+    navigator.clipboard.writeText(jsonStr).then(() => {
+        showToast('Q&Aデータをクリップボードにコピーしました！コードに貼り付け可能です');
+    }).catch(() => {
+        prompt('以下のJSONデータをコピーして保存してください:', jsonStr);
+    });
+}
+window.exportQACode = exportQACode;
+
+function resetQAData() {
+    if (confirm('Q&Aを初期状態に戻しますか？（現在の編集内容は上書きされます）')) {
+        saveMogiQAData(defaultMogiQAData);
+        renderMogiQASection();
+        showToast('Q&Aを初期データにリセットしました');
+    }
+}
+window.resetQAData = resetQAData;
+
+// ==========================================================================
+// 13. 共通ユーティリティ (トースト通知 & HTMLエスケープ)
+// ==========================================================================
+
+function showToast(message, isSuccess = true) {
+    const toast = document.getElementById('toastNotification');
+    const toastText = document.getElementById('toastText');
+    if (!toast || !toastText) return;
+
+    toastText.textContent = message;
+    toast.className = 'toast-notification' + (isSuccess ? ' toast-success' : ' toast-error');
+    toast.style.display = 'flex';
+
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 10);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 300);
+    }, 3200);
+}
+window.showToast = showToast;
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
