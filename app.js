@@ -2229,7 +2229,12 @@ const learningTopicsData = [
                 badge: "授業動画",
                 icon: "🎥",
                 desc: "空気の上昇と断熱膨張、雲の発生実験の解説",
-                links: []
+                links: [
+                    {
+                        title: "雲ができる仕組み（授業動画）",
+                        url: "https://drive.google.com/file/d/1UAMQhIr9Ds197pDpjJM8V2IbLRGaGuVp/view?usp=drive_link"
+                    }
+                ]
             },
             {
                 type: "sawanii",
@@ -2237,15 +2242,25 @@ const learningTopicsData = [
                 badge: "さわにい",
                 icon: "👨‍🏫",
                 desc: "飽和水蒸気量・露点・雲ができる仕組み",
-                links: []
+                links: [
+                    {
+                        title: "雲ができる仕組みと理由（露点・飽和水蒸気量）",
+                        url: "https://sawanii.ne.jp/cloud/"
+                    }
+                ]
             },
             {
                 type: "furikaeru",
                 siteName: "理科の授業をふりかえる",
                 badge: "理科の授業をふりかえる",
                 icon: "🎬",
-                desc: "雲ができる仕組みと水蒸気の変化",
-                links: []
+                desc: "雲ができる仕組みと上昇気流・気圧の変化",
+                links: [
+                    {
+                        title: "雲ができる仕組み（上昇気流と断熱膨張）",
+                        url: "https://hario-science.com/how-to-make-clouds/"
+                    }
+                ]
             }
         ]
     }
