@@ -2181,7 +2181,12 @@ const learningTopicsData = [
                 badge: "授業動画",
                 icon: "🎥",
                 desc: "日本の四季と気圧配置の解説",
-                links: []
+                links: [
+                    {
+                        title: "天気図の読み取り方2（授業動画）",
+                        url: "https://drive.google.com/file/d/1PY3VCtveek_9mGJ120RlxiylRcjjY5Sy/view?usp=drive_link"
+                    }
+                ]
             },
             {
                 type: "sawanii",
